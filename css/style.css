@@ -15,7 +15,7 @@ body {
 /* 首屏区域样式 */
 .header-section {
   position: relative;
-  background: url('../images/美食节图片生成.png') no-repeat center center;
+  background: url('https://image.dooo.ng/c/2025/04/08/67f4e45f58587.webp') no-repeat center center;
   background-size: cover;
   height: 100vh;
   display: flex;
