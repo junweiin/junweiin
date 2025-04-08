@@ -143,7 +143,7 @@ function initBookingModal() {
               "姓名": formData.name,
               "手机号": formData.phone,
               "预约日期": formData.date,
-              "用餐人数": parseInt(formData.people),
+              "用餐人数": formData.people.toString(),
               "套餐类型": formData.packageType === 'garlic' ? '蒜泥口味套餐' : 
                          formData.packageType === 'thirteen' ? '十三香口味套餐' : '香辣口味套餐',
               "提交时间": new Date().toISOString()
@@ -151,8 +151,19 @@ function initBookingModal() {
           }]
         })
       });
-  
-      if (!response.ok) throw new Error('提交失败');
+      
+      const responseData = await response.json();
+      
+      if (!response.ok || !responseData.success) {
+        console.error('API响应错误:', responseData);
+        throw new Error(responseData.message || '提交失败');
+      }
+      
+      if (!responseData.data || !responseData.data.records || responseData.data.records.length === 0) {
+        console.error('API响应数据异常:', responseData);
+        throw new Error('数据保存失败');
+      }
+      
       alert('预约成功！数据已保存');
       modal.style.display = 'none';
       bookingForm.reset();
