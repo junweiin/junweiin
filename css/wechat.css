@@ -23,9 +23,4 @@
   line-height: 1.5;
 }
 
-/* 只在微信浏览器中显示 */
-@media screen and (-webkit-min-device-pixel-ratio: 0) {
-  .wechat-tip {
-    display: block;
-  }
-}
+/* 微信提示浮层的显示由JavaScript控制 */
