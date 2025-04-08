@@ -131,7 +131,7 @@ function initBookingModal() {
   
     try {
       // 替换为您的vika API地址和token
-      const response = await fetch('https://api.vika.cn/fusion/v1/datasheets/dst89QMv5Ca857d7Ps/records?viewId=viwXm9h9UZajP&fieldKey=name', {
+      const response = await fetch('https://api.vika.cn/fusion/v1/datasheets/dst89QMv5Ca857d7Ps/records?viewId=viwXm9h9UZajP', {
         method: 'POST',
         headers: {
           'Authorization': 'Bearer uskcZUvxWXvLIPXN0hUC6DK',
@@ -144,11 +144,9 @@ function initBookingModal() {
               "手机号": formData.phone,
               "预约日期": formData.date,
               "用餐人数": parseInt(formData.people),
-              "套餐类型": {
-                "蒜泥口味套餐": "garlic",
-                "十三香口味套餐": "thirteen",
-                "香辣口味套餐": "spicy"
-              }[formData.packageType]
+              "套餐类型": formData.packageType === 'garlic' ? '蒜泥口味套餐' : 
+                         formData.packageType === 'thirteen' ? '十三香口味套餐' : '香辣口味套餐',
+              "提交时间": new Date().toISOString()
             }
           }]
         })
