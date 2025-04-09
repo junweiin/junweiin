@@ -31,8 +31,8 @@ const app = Vue.createApp({
       }
 
       try {
-        // 生成券码
-        this.voucherCode = 'ZJ' + Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+        // 生成券码 (000000-000500范围)
+        this.voucherCode = Math.floor(Math.random() * 501).toString().padStart(6, '0');
         
         // 准备提交到维格表的数据
         const submitData = {
