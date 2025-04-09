@@ -1,0 +1,97 @@
+/* 基本样式重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  color: #333;
+  background-color: #f5f5f5;
+}
+
+/* 首屏区域样式 */
+.header-section {
+  position: relative;
+  height: 100vh;
+  background: linear-gradient(to bottom, #ff4e50, #f9d423);
+  color: white;
+  text-align: center;
+  padding-top: 20vh;
+}
+
+.main-title {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.sub-title {
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* 倒计时样式 */
+.countdown-container {
+  margin: 2rem auto;
+}
+
+.countdown {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.countdown-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.countdown-item span {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.countdown-label {
+  font-size: 1rem;
+  font-weight: normal;
+}
+
+/* 套餐卡片样式 */
+.package-card {
+  background: white;
+  border-radius: 10px;
+  padding: 1rem;
+  margin: 1rem;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.package-img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+/* 按钮样式 */
+.buy-now-btn {
+  background: #ff4e50;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 25px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .main-title {
+    font-size: 2rem;
+  }
+  .sub-title {
+    font-size: 1.2rem;
+  }
+}

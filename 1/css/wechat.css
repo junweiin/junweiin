@@ -21,6 +21,25 @@
   color: #fff;
   font-size: 16px;
   line-height: 1.5;
+  margin: 0 15px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .wechat-tip img {
+    width: 150px;
+  }
+  .wechat-tip p {
+    font-size: 14px;
+  }
+}
+
+/* 交互效果 */
+.wechat-tip img {
+  transition: transform 0.3s ease;
+}
+.wechat-tip img:hover {
+  transform: scale(1.05);
 }
 
 /* 微信提示浮层的显示由JavaScript控制 */
