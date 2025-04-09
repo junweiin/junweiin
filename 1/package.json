@@ -1,0 +1,15 @@
+{
+  "name": "xiangrun-beer-crayfish-festival",
+  "version": "1.0.0",
+  "description": "相润金鹏酒店啤酒龙虾烧烤美食节活动页面",
+  "scripts": {
+    "dev": "npx serve",
+    "build": "echo 'No build step required for static site'",
+    "start": "npx serve"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "serve": "^14.2.1"
+  }
+}

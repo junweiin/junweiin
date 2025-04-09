@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>浓情端午 棕享款 - 高端酒店粽子礼盒提货券</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vant@4/lib/index.css"/>
+</head>
+<body>
+  <div id="app">
+    <!-- 顶部区域 -->
+    <header class="header">
+      <div class="logo-container">
+        <img src="./images/hotel-logo.png" alt="酒店logo" class="hotel-logo">
+      </div>
+      <div class="banner">
+        <h1 class="main-title">浓情端午 棕享款</h1>
+        <h2 class="sub-title">2025端午粽礼 预约开启</h2>
+      </div>
+    </header>
+
+    <!-- 中部区域 -->
+    <main class="main-content">
+      <!-- 礼盒展示区 -->
+      <section class="gift-box-section">
+        <div class="gift-box-image">
+          <img src="./images/gift-box.png" alt="粽子礼盒" class="gift-box">
+        </div>
+        <div class="price-tag">
+          <span class="price-value">88</span>
+          <span class="price-unit">元/盒</span>
+        </div>
+      </section>
+
+      <!-- 礼盒内容详情 -->
+      <section class="gift-details">
+        <h2 class="section-title">礼盒内容</h2>
+        <div class="gift-items">
+          <div class="gift-item">
+            <div class="item-image">
+              <img src="./images/zongzi1.png" alt="赤豆蜜枣粽" class="zongzi-img">
+            </div>
+            <div class="item-desc">
+              <h3>赤豆蜜枣粽</h3>
+              <p>100克*1</p>
+            </div>
+          </div>
+          <div class="gift-item">
+            <div class="item-image">
+              <img src="./images/zongzi2.png" alt="血糯蜜枣粽" class="zongzi-img">
+            </div>
+            <div class="item-desc">
+              <h3>血糯蜜枣粽</h3>
+              <p>100克*1</p>
+            </div>
+          </div>
+          <div class="gift-item">
+            <div class="item-image">
+              <img src="./images/zongzi3.png" alt="蛋黄鲜肉粽" class="zongzi-img">
+            </div>
+            <div class="item-desc">
+              <h3>蛋黄鲜肉粽</h3>
+              <p>100克*1</p>
+            </div>
+          </div>
+          <div class="gift-item">
+            <div class="item-image">
+              <img src="./images/zongzi4.png" alt="板栗鲜肉粽" class="zongzi-img">
+            </div>
+            <div class="item-desc">
+              <h3>板栗鲜肉粽</h3>
+              <p>100克*1</p>
+            </div>
+          </div>
+          <div class="gift-item">
+            <div class="item-image">
+              <img src="./images/egg.png" alt="咸鸭蛋" class="egg-img">
+            </div>
+            <div class="item-desc">
+              <h3>咸鸭蛋</h3>
+              <p>60克*4</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 提货券信息 -->
+      <section class="voucher-info">
+        <h2 class="section-title">提货券信息</h2>
+        <div class="info-list">
+          <div class="info-item">
+            <span class="info-label">提货券类型：</span>
+            <span class="info-value">实体券</span>
+          </div>
+
+          <div class="info-item">
+            <span class="info-label">使用日期：</span>
+            <span class="info-value">2025年4月21日-5月31日</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">酒店地址：</span>
+            <span class="info-value">安徽省淮北市新型煤化工合成材料基地基地北路16号</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">订购热线：</span>
+            <span class="info-value">0561-3086666</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 预约表单 -->
+      <section class="reservation-form">
+        <h2 class="section-title">预约登记</h2>
+        <form @submit.prevent="submitForm">
+          <div class="form-group">
+            <label for="name">姓名</label>
+            <input type="text" id="name" v-model="formData.name" required placeholder="请输入您的姓名">
+          </div>
+          <div class="form-group">
+            <label for="phone">手机号码</label>
+            <input type="tel" id="phone" v-model="formData.phone" required pattern="[0-9]{11}" placeholder="请输入11位手机号码">
+          </div>
+          <div class="form-group">
+            <label for="quantity">购买数量</label>
+            <div class="quantity-selector">
+              <button type="button" @click="decreaseQuantity" class="quantity-btn">-</button>
+              <input type="number" id="quantity" v-model.number="formData.quantity" min="1" max="10" required>
+              <button type="button" @click="increaseQuantity" class="quantity-btn">+</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="pickup-date">预约兑换时间</label>
+            <input type="date" id="pickup-date" v-model="formData.pickupDate" min="2025-04-21" max="2025-05-31" required>
+          </div>
+          <div class="form-group">
+            <label for="remarks">备注信息（可选）</label>
+            <textarea id="remarks" v-model="formData.remarks" placeholder="如有特殊需求，请在此备注"></textarea>
+          </div>
+          <button type="submit" class="submit-btn">提交预约</button>
+        </form>
+      </section>
+    </main>
+
+    <!-- 底部区域 -->
+    <footer class="footer">
+      <!-- 条款与细则 -->
+      <section class="terms-section">
+        <h2 class="section-title">条款与细则</h2>
+        <ol class="terms-list">
+          <li>此券不可兑换现金、不找零、不挂失、涂改撕毁无效；</li>
+          <li>此券不能与其他优惠同时使用；</li>
+          <li>请凭本券与指定日期内的提货时间到淮北相润金鹏酒店大堂吧领取粽子礼盒；</li>
+          <li>此券需加盖本酒店印章，盖章生效，复印无效；</li>
+          <li>此券最终解释权归淮北相润金鹏酒店所有。</li>
+        </ol>
+      </section>
+
+      <!-- 酒店联系信息 -->
+      <div class="contact-info">
+        <p>淮北相润金鹏酒店 © 2025</p>
+        <p>地址：安徽省淮北市新型煤化工合成材料基地基地北路16号</p>
+        <p>电话：0561-3086666</p>
+      </div>
+    </footer>
+
+    <!-- 弹窗组件 -->
+    <div class="modal" v-if="showModal">
+      <div class="modal-content">
+        <span class="close-btn" @click="closeModal">&times;</span>
+        <h2>预约成功</h2>
+        <p>您的券码是: <strong>{{ voucherCode }}</strong></p>
+        <p>请保存此券码，凭券码到酒店领取粽子礼盒。</p>
+        <div class="modal-footer">
+          <button @click="closeModal" class="modal-btn">确定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="./js/main.js"></script>
+</body>
+</html>

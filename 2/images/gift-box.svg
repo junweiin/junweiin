@@ -1,0 +1,13 @@
+<svg width="400" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- 礼盒背景 -->
+  <rect x="50" y="50" width="300" height="200" rx="10" fill="#f9f5e8"/>
+  
+  <!-- 礼盒主体 -->
+  <rect x="75" y="75" width="250" height="150" rx="5" fill="#d4af37" opacity="0.8"/>
+  
+  <!-- 礼盒盖子 -->
+  <rect x="65" y="65" width="270" height="30" rx="5" fill="#a67c00"/>
+  
+  <!-- 礼盒丝带 -->
+  <rect x="175" y="50" width="50" height="200" fill="#cc0000"/>
+  <rect x="50" y="125" width="300" height="50" fill="#cc0000"/>

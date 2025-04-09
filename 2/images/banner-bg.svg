@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400">
+  <defs>
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a67c00" />
+      <stop offset="100%" stop-color="#ffd700" />
+    </linearGradient>
+    <linearGradient id="redGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#cc0000" />
+      <stop offset="100%" stop-color="#ff3333" />
+    </linearGradient>
+  </defs>
+  
+  <rect width="1200" height="400" fill="url(#goldGradient)" />
+  
+  <!-- 龙舟图案 -->
+  <path d="M200,250 C250,200 350,200 400,250 C450,300 500,300 550,250 C600,200 700,200 750,250" 
+        stroke="url(#redGradient)" stroke-width="8" fill="none" />
+  
+  <!-- 粽子图案 -->
+  <path d="M300,150 L350,200 L300,250 L250,200 Z" fill="#fff" stroke="#a67c00" stroke-width="3" />
+  <path d="M500,150 L550,200 L500,250 L450,200 Z" fill="#fff" stroke="#a67c00" stroke-width="3" />
+  <path d="M700,150 L750,200 L700,250 L650,200 Z" fill="#fff" stroke="#a67c00" stroke-width="3" />
+  
+  <!-- 装饰性波浪线 -->
+  <path d="M0,350 Q150,300 300,350 T600,350 T900,350 T1200,350" 
+        stroke="rgba(255,255,255,0.3)" stroke-width="2" fill="none" />
+</svg>
