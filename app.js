@@ -368,11 +368,11 @@ async function handlePost(e) {
 }
 
 /**
- * 压缩图片到指定宽度
- * @param {File} file - 原始图片文件
- * @param {number} maxWidth - 最大宽度，默认1080
+ * 压缩图片并添加水印
+ * @param {File} file - 要压缩的图片文件
+ * @param {number} maxWidth - 最大宽度，默认1080px
  * @param {number} quality - 压缩质量，默认0.8
- * @returns {Promise<Blob>} 压缩后的图片Blob
+ * @returns {Promise<Blob>} 压缩后带水印的图片Blob
  */
 function compressImage(file, maxWidth = 1080, quality = 0.8) {
     return new Promise((resolve, reject) => {
@@ -380,29 +380,125 @@ function compressImage(file, maxWidth = 1080, quality = 0.8) {
         const ctx = canvas.getContext('2d');
         const img = new Image();
         
-        img.onload = function() {
-            // 计算压缩后的尺寸
-            let { width, height } = img;
+        // 读取EXIF数据
+        EXIF.getData(file, function() {
+            let gpsInfo = null;
+            const latitude = EXIF.getTag(this, 'GPSLatitude');
+            const longitude = EXIF.getTag(this, 'GPSLongitude');
+            const latRef = EXIF.getTag(this, 'GPSLatitudeRef');
+            const longRef = EXIF.getTag(this, 'GPSLongitudeRef');
             
-            if (width > maxWidth) {
-                height = (height * maxWidth) / width;
-                width = maxWidth;
+            if (latitude && longitude) {
+                // 转换GPS坐标为十进制格式
+                const latDec = convertDMSToDD(latitude, latRef);
+                const longDec = convertDMSToDD(longitude, longRef);
+                gpsInfo = { latitude: latDec, longitude: longDec };
             }
             
-            // 设置canvas尺寸
-            canvas.width = width;
-            canvas.height = height;
+            img.onload = function() {
+                // 计算压缩后的尺寸
+                let { width, height } = img;
+                
+                if (width > maxWidth) {
+                    height = (height * maxWidth) / width;
+                    width = maxWidth;
+                }
+                
+                // 设置canvas尺寸
+                canvas.width = width;
+                canvas.height = height;
+                
+                // 绘制压缩后的图片
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // 添加水印
+                addWatermark(ctx, width, height, gpsInfo);
+                
+                // 转换为Blob
+                canvas.toBlob(resolve, 'image/jpeg', quality);
+            };
             
-            // 绘制压缩后的图片
-            ctx.drawImage(img, 0, 0, width, height);
-            
-            // 转换为Blob
-            canvas.toBlob(resolve, 'image/jpeg', quality);
-        };
-        
-        img.onerror = reject;
-        img.src = URL.createObjectURL(file);
+            img.onerror = reject;
+            img.src = URL.createObjectURL(file);
+        });
     });
+}
+
+/**
+ * 将GPS坐标从度分秒格式转换为十进制格式
+ * @param {Array} dms - 度分秒数组
+ * @param {string} ref - 方向参考（N/S/E/W）
+ * @returns {number} 十进制格式的坐标
+ */
+function convertDMSToDD(dms, ref) {
+    const degrees = dms[0];
+    const minutes = dms[1];
+    const seconds = dms[2];
+    
+    let dd = degrees + minutes / 60 + seconds / 3600;
+    if (ref === 'S' || ref === 'W') {
+        dd = -dd;
+    }
+    return Number(dd.toFixed(6));
+}
+
+/**
+ * 添加水印到canvas
+ * @param {CanvasRenderingContext2D} ctx - canvas上下文
+ * @param {number} width - 图片宽度
+ * @param {number} height - 图片高度
+ * @param {Object|null} gpsInfo - GPS信息对象，包含latitude和longitude
+ */
+function addWatermark(ctx, width, height, gpsInfo) {
+    // 获取当前日期时间
+    const now = new Date();
+    const dateStr = now.getFullYear() + 
+        String(now.getMonth() + 1).padStart(2, '0') + 
+        String(now.getDate()).padStart(2, '0') + 
+        String(now.getHours()).padStart(2, '0') + 
+        String(now.getMinutes()).padStart(2, '0') + 
+        String(now.getSeconds()).padStart(2, '0');
+    
+    // 水印文本
+    const watermarkText = '相润金鹏酒店工程部';
+    const dateText = dateStr;
+    const gpsText = gpsInfo ? 
+        `经度：${gpsInfo.longitude}° 纬度：${gpsInfo.latitude}°` : 
+        '无GPS信息';
+    
+    // 设置字体大小（根据图片尺寸自适应）
+    const fontSize = Math.max(12, Math.min(width, height) * 0.03);
+    ctx.font = `${fontSize}px Arial, sans-serif`;
+    
+    // 设置文字样式
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.lineWidth = 1;
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    
+    // 计算水印位置（右下角）
+    const padding = fontSize * 0.5;
+    const textX = width - padding;
+    const watermarkY = height - padding - fontSize * 2;
+    const dateY = height - padding - fontSize;
+    const gpsY = height - padding;
+    
+    // 绘制水印文本（先描边再填充，增强可读性）
+    ctx.strokeText(watermarkText, textX, watermarkY);
+    ctx.fillText(watermarkText, textX, watermarkY);
+    
+    // 绘制日期文本
+    ctx.strokeText(dateText, textX, dateY);
+    ctx.fillText(dateText, textX, dateY);
+    
+    // 绘制GPS信息
+    ctx.strokeText(gpsText, textX, gpsY);
+    ctx.fillText(gpsText, textX, gpsY);
+    
+    // 绘制日期文本
+    ctx.strokeText(dateText, textX, dateY);
+    ctx.fillText(dateText, textX, dateY);
 }
 
 /**
