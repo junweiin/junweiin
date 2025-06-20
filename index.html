@@ -16,6 +16,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- LeanCloud SDK - 使用更稳定的 CDN 源 -->
     <script src="https://unpkg.com/leancloud-storage@4.15.2/dist/av-min.js"></script>
+    <!-- EXIF.js - 用于读取图片GPS信息 -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
     <!-- 备用 CDN 源 -->
     <script>
         // 检测 LeanCloud SDK 是否加载成功，如果失败则使用备用源
@@ -188,7 +190,7 @@
             <form id="postForm">
                 <textarea 
                     id="postContent" 
-                    placeholder="分享你的想法..." 
+                    placeholder="记录当下工作..." 
                     class="w-full p-4 border border-gray-200 rounded-2xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-300 text-gray-700 placeholder-gray-400"
                     rows="3"
                     required
@@ -231,6 +233,11 @@
         <div id="noMoreContent" class="hidden text-center py-8 text-gray-500">
             没有更多内容了
         </div>
+
+        <!-- 尾部 -->
+        <footer class="text-center py-4 text-gray-500 text-sm border-t border-gray-200 mt-8">
+            <p>数据存储于LeanCloud 页面构建于Github.io</p>
+        </footer>
     </main>
 
     <!-- 登录弹窗 -->
