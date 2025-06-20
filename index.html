@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- 微信浏览器兼容性设置 -->
+    <meta name="x5-orientation" content="portrait">
+    <meta name="x5-fullscreen" content="true">
+    <meta name="x5-page-mode" content="app">
+    <title>工作日志</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <!-- Tailwind CSS CDN - 开发环境使用 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- LeanCloud SDK - 使用更稳定的 CDN 源 -->
+    <script src="https://unpkg.com/leancloud-storage@4.15.2/dist/av-min.js"></script>
+    <!-- 备用 CDN 源 -->
+    <script>
+        // 检测 LeanCloud SDK 是否加载成功，如果失败则使用备用源
+        window.addEventListener('load', function() {
+            if (typeof AV === 'undefined') {
+                console.log('主 CDN 加载失败，尝试备用源...');
+                var script = document.createElement('script');
+                script.src = 'https://cdn.bootcdn.net/ajax/libs/leancloud-storage/4.15.2/av-min.js';
+                script.onerror = function() {
+                    console.error('所有 CDN 源都加载失败，请检查网络连接');
+                    alert('网络连接异常，请检查网络后刷新页面');
+                };
+                document.head.appendChild(script);
+            }
+        });
+    </script>
+    <style>
+        /* 微信浏览器兼容性修复 */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+        
+        body {
+            -webkit-overflow-scrolling: touch;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        
+        input, textarea, button {
+            -webkit-appearance: none;
+            appearance: none;
+            border-radius: 0;
+        }
+        
+        button {
+            outline: none;
+            border: none;
+        }
+        
+        /* 修复微信中的滚动问题 */
+        .overflow-y-auto {
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .modal-overlay {
+            backdrop-filter: blur(4px);
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .loading {
+            border-top-color: #3498db;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .delete-log-btn {
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        
+        /* 微信中触摸设备的删除按钮显示优化 */
+        @media (hover: none) and (pointer: coarse) {
+            .delete-log-btn {
+                opacity: 0.6;
+            }
+        }
+        
+        .bg-white:hover .delete-log-btn {
+            opacity: 1;
+        }
+        .delete-log-btn:hover {
+            transform: scale(1.1);
+        }
+        @keyframes slideOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(-100%); }
+        }
+        
+        /* 微信浏览器中的按钮样式修复 */
+        .btn-fix {
+            -webkit-appearance: none;
+            appearance: none;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 顶部导航栏 -->
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <h1 class="text-xl font-semibold text-gray-800">工作日志</h1>
+                <div id="userInfo" class="hidden items-center space-x-2 sm:space-x-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-2 text-right sm:text-left">
+                        <div class="flex items-center space-x-1">
+                            <span id="realName" class="text-gray-800 font-medium text-sm sm:text-base cursor-pointer hover:text-blue-600 transition-colors"></span>
+                            <button id="editRealNameBtn" class="text-gray-400 hover:text-blue-600 transition-colors btn-fix" title="编辑真实姓名">
+                                <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <span id="username" class="text-gray-500 text-xs sm:text-sm"></span>
+                    </div>
+                    <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm transition-colors btn-fix">
+                        <span class="hidden sm:inline">退出登录</span>
+                        <span class="sm:hidden">退出</span>
+                    </button>
+                </div>
+                <button id="loginBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm transition-colors btn-fix">
+                    登录
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区域 -->
+    <main class="max-w-4xl mx-auto px-4 py-6">
+        <!-- 欢迎页面 -->
+        <div id="welcomeSection" class="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg shadow-sm border border-blue-200 p-8 mb-6 text-center">
+            <div class="mb-6">
+                <h1 class="text-3xl font-bold text-gray-800 mb-4">欢迎使用工作日志系统</h1>
+                <div class="text-xl text-blue-600 font-semibold mb-2">
+                    相润金鹏酒店工程部
+                </div>
+                <p class="text-gray-600 text-lg mb-6">
+                    记录每一天的工作成果，见证团队的成长与进步
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-lg p-6 shadow-sm">
+                    <div class="text-blue-500 text-3xl mb-3">📝</div>
+                    <h3 class="font-semibold text-gray-800 mb-2">记录工作</h3>
+                    <p class="text-gray-600 text-sm">详细记录每日工作内容和进展</p>
+                </div>
+                <div class="bg-white rounded-lg p-6 shadow-sm">
+                    <div class="text-green-500 text-3xl mb-3">📸</div>
+                    <h3 class="font-semibold text-gray-800 mb-2">图片记录</h3>
+                    <p class="text-gray-600 text-sm">支持上传工作现场照片</p>
+                </div>
+                <div class="bg-white rounded-lg p-6 shadow-sm">
+                    <div class="text-purple-500 text-3xl mb-3">👥</div>
+                    <h3 class="font-semibold text-gray-800 mb-2">团队协作</h3>
+                    <p class="text-gray-600 text-sm">与团队成员分享工作动态</p>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <h3 class="font-semibold text-gray-800 mb-3">开始使用</h3>
+                <p class="text-gray-600 mb-4">点击右上角"登录"按钮，注册账号后即可开始记录工作日志</p>
+                <button id="welcomeLoginBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-colors font-medium btn-fix">
+                    立即开始
+                </button>
+            </div>
+        </div>
+        
+        <!-- 发布新日志 -->
+        <div id="postSection" class="hidden bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6">
+            <form id="postForm">
+                <textarea 
+                    id="postContent" 
+                    placeholder="分享你的想法..." 
+                    class="w-full p-4 border border-gray-200 rounded-2xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-300 text-gray-700 placeholder-gray-400"
+                    rows="3"
+                    required
+                ></textarea>
+                <div class="mt-3 flex justify-between items-center">
+                    <label for="imageInput" class="flex items-center cursor-pointer text-gray-600 hover:text-gray-800 transition-colors">
+                        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <span class="text-sm">添加图片</span>
+                    </label>
+                    <input 
+                        type="file" 
+                        id="imageInput" 
+                        accept="image/*" 
+                        multiple 
+                        class="hidden"
+                    >
+                    <button 
+                        type="submit" 
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-full transition-colors font-medium btn-fix"
+                    >
+                        发布
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 日志列表 -->
+        <div id="logsList">
+            <!-- 日志项目将在这里动态加载 -->
+        </div>
+
+        <!-- 加载更多指示器 -->
+        <div id="loadingIndicator" class="hidden flex justify-center py-8">
+            <div class="w-8 h-8 border-4 border-gray-300 border-t-blue-500 rounded-full loading"></div>
+        </div>
+
+        <!-- 无更多内容提示 -->
+        <div id="noMoreContent" class="hidden text-center py-8 text-gray-500">
+            没有更多内容了
+        </div>
+    </main>
+
+    <!-- 登录弹窗 -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 modal-overlay flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto fade-in">
+            <div class="sticky top-0 bg-white p-4 border-b border-gray-200 rounded-t-lg">
+                <div class="flex justify-between items-center">
+                    <h2 id="modalTitle" class="text-xl font-semibold text-gray-800">登录</h2>
+                    <button id="closeModal" class="text-gray-400 hover:text-gray-600 text-2xl btn-fix">&times;</button>
+                </div>
+            </div>
+            
+            <div class="p-4">
+                <!-- 登录表单 -->
+                <form id="loginForm" class="space-y-4">
+                    <div>
+                        <label for="loginUsername" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                        <input 
+                            type="text" 
+                            id="loginUsername" 
+                            autocomplete="username"
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                            required
+                        >
+                    </div>
+                    <div>
+                        <label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                        <input 
+                            type="password" 
+                            id="loginPassword" 
+                            autocomplete="current-password"
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                            required
+                        >
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                        <button 
+                            type="submit" 
+                            class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg transition-colors text-sm font-medium btn-fix"
+                        >
+                            登录
+                        </button>
+                        <button 
+                            type="button" 
+                            id="showRegisterBtn" 
+                            class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg transition-colors text-sm font-medium btn-fix"
+                        >
+                            注册新账号
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- 注册表单 -->
+                <form id="registerForm" class="space-y-4 hidden">
+                    <div>
+                        <label for="registerUsername" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                        <input 
+                            type="text" 
+                            id="registerUsername" 
+                            autocomplete="username"
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                            required
+                        >
+                    </div>
+                    <div>
+                        <label for="registerRealName" class="block text-sm font-medium text-gray-700 mb-1">真实姓名</label>
+                        <input 
+                            type="text" 
+                            id="registerRealName" 
+                            autocomplete="name"
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                            required
+                            placeholder="请输入您的真实姓名"
+                        >
+                    </div>
+                    <div>
+                        <label for="registerPassword" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                        <input 
+                            type="password" 
+                            id="registerPassword" 
+                            autocomplete="new-password"
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                            required
+                        >
+                    </div>
+                    <div>
+                        <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-1">确认密码</label>
+                        <input 
+                            type="password" 
+                            id="confirmPassword" 
+                            autocomplete="new-password"
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                            required
+                        >
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                        <button 
+                            type="submit" 
+                            class="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg transition-colors text-sm font-medium btn-fix"
+                        >
+                            注册
+                        </button>
+                        <button 
+                            type="button" 
+                            id="showLoginBtn" 
+                            class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg transition-colors text-sm font-medium btn-fix"
+                        >
+                            返回登录
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑真实姓名弹窗 -->
+    <div id="editRealNameModal" class="hidden fixed inset-0 bg-black bg-opacity-50 modal-overlay z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto fade-in">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">编辑真实姓名</h3>
+                <form id="editRealNameForm">
+                    <div class="mb-4">
+                        <label for="newRealName" class="block text-sm font-medium text-gray-700 mb-2">真实姓名</label>
+                        <input 
+                            type="text" 
+                            id="newRealName" 
+                            placeholder="请输入您的真实姓名" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required
+                        >
+                    </div>
+                    <div class="flex gap-3">
+                        <button 
+                            type="submit" 
+                            class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg transition-colors text-sm font-medium btn-fix"
+                        >
+                            保存
+                        </button>
+                        <button 
+                            type="button" 
+                            id="cancelEditRealName" 
+                            class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg transition-colors text-sm font-medium btn-fix"
+                        >
+                            取消
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
