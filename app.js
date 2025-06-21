@@ -100,6 +100,12 @@ function showUserInterface() {
     elements.userInfo.classList.add('flex');
     elements.postSection.classList.remove('hidden');
     
+    // 显示专业功能区域
+    const specialFunctionsSection = document.getElementById('specialFunctionsSection');
+    if (specialFunctionsSection) {
+        specialFunctionsSection.classList.remove('hidden');
+    }
+    
     // 更新用户信息显示
     updateUserDisplay();
     
@@ -117,6 +123,13 @@ function showLoginInterface() {
     elements.loginBtn.classList.remove('hidden');
     elements.userInfo.classList.add('hidden');
     elements.postSection.classList.add('hidden');
+    
+    // 隐藏专业功能区域
+    const specialFunctionsSection = document.getElementById('specialFunctionsSection');
+    if (specialFunctionsSection) {
+        specialFunctionsSection.classList.add('hidden');
+    }
+    
     // 显示欢迎页面
     const welcomeSection = document.getElementById('welcomeSection');
     if (welcomeSection) {
@@ -339,9 +352,15 @@ async function handlePost(e) {
         log.set('authorName', authorName);
         
         // 处理图片上传
+        const fileCount = elements.imageInput.files.length;
+        if (fileCount > 0) {
+            showMessage(`正在压缩并上传 ${fileCount} 张图片...`, 'info');
+        }
+        
         const images = await uploadImages();
         if (images.length > 0) {
             log.set('images', images);
+            showMessage(`${images.length} 张图片上传成功`, 'success');
         }
         
         await log.save();
@@ -362,7 +381,45 @@ async function handlePost(e) {
 }
 
 /**
- * 上传图片
+ * 压缩图片到指定宽度
+ * @param {File} file - 原始图片文件
+ * @param {number} maxWidth - 最大宽度，默认1080
+ * @param {number} quality - 压缩质量，默认0.8
+ * @returns {Promise<Blob>} 压缩后的图片Blob
+ */
+function compressImage(file, maxWidth = 1080, quality = 0.8) {
+    return new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        img.onload = function() {
+            // 计算压缩后的尺寸
+            let { width, height } = img;
+            
+            if (width > maxWidth) {
+                height = (height * maxWidth) / width;
+                width = maxWidth;
+            }
+            
+            // 设置canvas尺寸
+            canvas.width = width;
+            canvas.height = height;
+            
+            // 绘制压缩后的图片
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // 转换为Blob
+            canvas.toBlob(resolve, 'image/jpeg', quality);
+        };
+        
+        img.onerror = reject;
+        img.src = URL.createObjectURL(file);
+    });
+}
+
+/**
+ * 上传图片（带压缩功能）
  */
 async function uploadImages() {
     const files = elements.imageInput.files;
@@ -370,11 +427,23 @@ async function uploadImages() {
     
     for (let i = 0; i < files.length; i++) {
         try {
-            const file = new AV.File(files[i].name, files[i]);
+            // 压缩图片
+            const compressedBlob = await compressImage(files[i]);
+            
+            // 创建新的文件名（保持原扩展名或使用.jpg）
+            const originalName = files[i].name;
+            const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.')) || originalName;
+            const compressedFileName = `${nameWithoutExt}_compressed.jpg`;
+            
+            // 上传压缩后的图片
+            const file = new AV.File(compressedFileName, compressedBlob);
             const savedFile = await file.save();
             images.push(savedFile.url());
+            
+            console.log(`图片 ${originalName} 压缩并上传成功`);
         } catch (error) {
-            console.error('图片上传失败:', error);
+            console.error('图片压缩或上传失败:', error);
+            showMessage(`图片 ${files[i].name} 处理失败`, 'error');
         }
     }
     
