@@ -16,8 +16,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- LeanCloud SDK - 使用更稳定的 CDN 源 -->
     <script src="https://unpkg.com/leancloud-storage@4.15.2/dist/av-min.js"></script>
-    <!-- EXIF.js - 用于读取图片GPS信息 -->
-    <script src="https://cdn.bootcdn.net/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
     <!-- 备用 CDN 源 -->
     <script>
         // 检测 LeanCloud SDK 是否加载成功，如果失败则使用备用源
@@ -190,7 +188,7 @@
             <form id="postForm">
                 <textarea 
                     id="postContent" 
-                    placeholder="记录当下工作..." 
+                    placeholder="分享你的想法..." 
                     class="w-full p-4 border border-gray-200 rounded-2xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-300 text-gray-700 placeholder-gray-400"
                     rows="3"
                     required
@@ -219,6 +217,32 @@
             </form>
         </div>
 
+        <!-- 专业功能区域 -->
+        <div id="specialFunctionsSection" class="hidden bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">专业功能</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <a href="https://tcxbcgw45z.jiandaoyun.com/f/668249696ec9a7fc0a2eae1c" target="_blank" class="block bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white p-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-sm hover:shadow-md">
+                    <div class="flex items-center space-x-3">
+                        <div class="text-2xl">🔧</div>
+                        <div>
+                            <h3 class="font-semibold text-lg">工程报修登记</h3>
+                            <p class="text-blue-100 text-sm">设备故障报修与维护记录</p>
+                        </div>
+                    </div>
+                </a>
+                <!-- 可以在这里添加更多专业功能 -->
+                <div class="bg-gray-100 p-4 rounded-xl border-2 border-dashed border-gray-300">
+                    <div class="flex items-center space-x-3 text-gray-500">
+                        <div class="text-2xl">🔧</div>
+                        <div>
+                            <h3 class="font-semibold text-lg">更多功能</h3>
+                            <p class="text-sm">敬请期待...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- 日志列表 -->
         <div id="logsList">
             <!-- 日志项目将在这里动态加载 -->
@@ -231,12 +255,20 @@
 
         <!-- 无更多内容提示 -->
         <div id="noMoreContent" class="hidden text-center py-8 text-gray-500">
-            没有更多内容了
+            没有更多工作了
         </div>
 
-        <!-- 尾部 -->
-        <footer class="text-center py-4 text-gray-500 text-sm border-t border-gray-200 mt-8">
-            <p>数据存储于LeanCloud 页面构建于Github.io</p>
+        <!-- 页脚区域 -->
+        <footer class="mt-12 pt-8 border-t border-gray-200">
+            <div class="text-center space-y-3">
+                <a href="changelog.html" class="inline-flex items-center space-x-2 text-gray-500 hover:text-blue-500 transition-colors text-sm">
+                    <span>📋</span>
+                    <span>系统更新日志</span>
+                </a>
+                <div class="text-xs text-gray-400 space-y-1">
+                    <p>数据存储于 LeanCloud | 页面构建于 Github.io</p>
+                </div>
+            </div>
         </footer>
     </main>
 
