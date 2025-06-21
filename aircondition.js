@@ -90,14 +90,18 @@ function initApp() {
 
 /**
  * 检查当前用户登录状态
+ * 添加延迟确保LeanCloud SDK完全初始化
  */
 function checkCurrentUser() {
-    currentUser = AV.User.current();
-    if (currentUser) {
-        showOperationInterface();
-    } else {
-        showLoginPrompt();
-    }
+    // 给LeanCloud SDK一些时间来恢复用户状态
+    setTimeout(() => {
+        currentUser = AV.User.current();
+        if (currentUser) {
+            showOperationInterface();
+        } else {
+            showLoginPrompt();
+        }
+    }, 100); // 100ms延迟通常足够
 }
 
 /**
