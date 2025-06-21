@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- 微信浏览器兼容性设置 -->
+    <meta name="x5-orientation" content="portrait">
+    <meta name="x5-fullscreen" content="true">
+    <meta name="x5-page-mode" content="app">
+    <title>空调机房操作记录</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- LeanCloud SDK -->
+    <script src="https://unpkg.com/leancloud-storage@4.15.2/dist/av-min.js"></script>
+    <!-- 备用 CDN 源 -->
+    <script>
+        window.addEventListener('load', function() {
+            if (typeof AV === 'undefined') {
+                console.log('主 CDN 加载失败，尝试备用源...');
+                var script = document.createElement('script');
+                script.src = 'https://cdn.bootcdn.net/ajax/libs/leancloud-storage/4.15.2/av-min.js';
+                script.onerror = function() {
+                    console.error('所有 CDN 源都加载失败，请检查网络连接');
+                    alert('网络连接异常，请检查网络后刷新页面');
+                };
+                document.head.appendChild(script);
+            }
+        });
+    </script>
+    <style>
+        /* 微信浏览器兼容性修复 */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+        
+        body {
+            -webkit-overflow-scrolling: touch;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        
+        input, textarea, button {
+            -webkit-appearance: none;
+            appearance: none;
+            border-radius: 0;
+        }
+        
+        button {
+            outline: none;
+            border: none;
+        }
+        
+        .overflow-y-auto {
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .modal-overlay {
+            backdrop-filter: blur(4px);
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .loading {
+            border-top-color: #3498db;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .btn-fix {
+            -webkit-appearance: none;
+            appearance: none;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+        }
+        
+        /* 开关按钮样式 */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 顶部导航栏 -->
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <button id="backBtn" class="text-gray-600 hover:text-gray-800 transition-colors btn-fix">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </button>
+                    <h1 class="text-xl font-semibold text-gray-800">空调机房操作记录</h1>
+                </div>
+                <div id="userInfo" class="hidden items-center space-x-2 sm:space-x-4">
+                    <span id="realName" class="text-gray-800 font-medium text-sm sm:text-base"></span>
+                    <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm transition-colors btn-fix">
+                        <span class="hidden sm:inline">退出登录</span>
+                        <span class="sm:hidden">退出</span>
+                    </button>
+                </div>
+                <button id="loginBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm transition-colors btn-fix">
+                    登录
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区域 -->
+    <main class="max-w-4xl mx-auto px-4 py-6">
+        <!-- 未登录提示 -->
+        <div id="loginPrompt" class="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg shadow-sm border border-blue-200 p-8 mb-6 text-center">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">请先登录</h2>
+                <p class="text-gray-600 text-lg mb-6">
+                    需要登录后才能进行空调机房操作记录
+                </p>
+                <button id="promptLoginBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-colors font-medium btn-fix">
+                    立即登录
+                </button>
+            </div>
+        </div>
+        
+        <!-- 操作记录表单 -->
+        <div id="operationSection" class="hidden">
+            <!-- 设备状态控制 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">设备状态控制</h2>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <label class="text-gray-700 font-medium">冷冻水泵</label>
+                        <label class="switch">
+                            <input type="checkbox" id="chilledWaterPump">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <label class="text-gray-700 font-medium">冷却水泵</label>
+                        <label class="switch">
+                            <input type="checkbox" id="coolingWaterPump">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 温度和压力数据 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">温度和压力数据</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="chilledWaterInletTemp" class="block text-sm font-medium text-gray-700 mb-2">冷水入口温度 (°C)</label>
+                        <input type="number" id="chilledWaterInletTemp" step="0.1" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="请输入温度">
+                    </div>
+                    <div>
+                        <label for="chilledWaterOutletTemp" class="block text-sm font-medium text-gray-700 mb-2">冷水出口温度 (°C)</label>
+                        <input type="number" id="chilledWaterOutletTemp" step="0.1" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="请输入温度">
+                    </div>
+                    <div>
+                        <label for="highTempGeneratorTemp" class="block text-sm font-medium text-gray-700 mb-2">高温发生器温度 (°C)</label>
+                        <input type="number" id="highTempGeneratorTemp" step="0.1" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="请输入温度">
+                    </div>
+                    <div>
+                        <label for="coolingWaterInletTemp" class="block text-sm font-medium text-gray-700 mb-2">冷却水入口温度 (°C)</label>
+                        <input type="number" id="coolingWaterInletTemp" step="0.1" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="请输入温度">
+                    </div>
+                    <div>
+                        <label for="coolingWaterOutletTemp" class="block text-sm font-medium text-gray-700 mb-2">冷却水出口温度 (°C)</label>
+                        <input type="number" id="coolingWaterOutletTemp" step="0.1" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="请输入温度">
+                    </div>
+                    <div>
+                        <label for="vacuumPressure" class="block text-sm font-medium text-gray-700 mb-2">真空压力 (kPa)</label>
+                        <input type="number" id="vacuumPressure" step="0.1" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="请输入压力">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 图片上传 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">现场照片</h2>
+                <label for="imageInput" class="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
+                    <div class="text-center">
+                        <svg class="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <p class="text-gray-600">点击上传现场照片</p>
+                        <p class="text-sm text-gray-400">支持多张图片上传</p>
+                    </div>
+                </label>
+                <input type="file" id="imageInput" accept="image/*" multiple class="hidden">
+                <div id="imagePreview" class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-2 hidden"></div>
+            </div>
+
+            <!-- 提交按钮 -->
+            <div class="flex justify-center">
+                <button id="submitBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg transition-colors font-medium btn-fix text-lg">
+                    提交操作记录
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- 登录弹窗 -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 modal-overlay flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto fade-in">
+            <div class="sticky top-0 bg-white p-4 border-b border-gray-200 rounded-t-lg">
+                <div class="flex justify-between items-center">
+                    <h2 id="modalTitle" class="text-xl font-semibold text-gray-800">登录</h2>
+                    <button id="closeModal" class="text-gray-400 hover:text-gray-600 text-2xl btn-fix">&times;</button>
+                </div>
+            </div>
+            
+            <div class="p-4">
+                <!-- 登录表单 -->
+                <form id="loginForm" class="space-y-4">
+                    <div>
+                        <label for="loginUsername" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                        <input type="text" id="loginUsername" autocomplete="username" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" required>
+                    </div>
+                    <div>
+                        <label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                        <input type="password" id="loginPassword" autocomplete="current-password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" required>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                        <button type="submit" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg transition-colors text-sm font-medium btn-fix">登录</button>
+                        <button type="button" id="showRegisterBtn" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg transition-colors text-sm font-medium btn-fix">注册新账号</button>
+                    </div>
+                </form>
+                
+                <!-- 注册表单 -->
+                <form id="registerForm" class="space-y-4 hidden">
+                    <div>
+                        <label for="registerUsername" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                        <input type="text" id="registerUsername" autocomplete="username" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" required>
+                    </div>
+                    <div>
+                        <label for="registerRealName" class="block text-sm font-medium text-gray-700 mb-1">真实姓名</label>
+                        <input type="text" id="registerRealName" autocomplete="name" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" required placeholder="请输入您的真实姓名">
+                    </div>
+                    <div>
+                        <label for="registerPassword" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                        <input type="password" id="registerPassword" autocomplete="new-password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" required>
+                    </div>
+                    <div>
+                        <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-1">确认密码</label>
+                        <input type="password" id="confirmPassword" autocomplete="new-password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" required>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                        <button type="submit" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg transition-colors text-sm font-medium btn-fix">注册</button>
+                        <button type="button" id="showLoginBtn" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg transition-colors text-sm font-medium btn-fix">返回登录</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="aircondition.js"></script>
+</body>
+</html>
