@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统更新日志 - 工作日志系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .version-card {
+            transition: all 0.3s ease;
+        }
+        
+        .version-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <a href="index.html" class="text-blue-500 hover:text-blue-600 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                    </a>
+                    <h1 class="text-xl font-semibold text-gray-800">系统更新日志</h1>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- 页面标题 -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">系统更新日志</h1>
+            <p class="text-gray-600">记录系统的功能更新和改进历程</p>
+        </div>
+
+        <!-- 更新日志列表 -->
+        <div class="space-y-6">
+            <!-- 2025年更新 -->
+            <div class="version-card bg-white rounded-2xl shadow-sm border border-gray-100 p-6 fade-in">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-2xl font-bold text-gray-900">功能更新</h2>
+                    <span class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full">最新</span>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- 工程报修登记 -->
+                    <div class="border-l-4 border-orange-500 pl-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">🔧 工程报修登记 2025-06-21</h3>
+                        <p class="text-gray-600 mb-2">集成外部报修系统</p>
+                        <ul class="text-sm text-gray-500 space-y-1 ml-4">
+                            <li>• 连接到简道云报修系统</li>
+                            <li>• 设备故障报修与维护记录</li>
+                            <li>• 新窗口打开，保持系统独立性</li>
+                        </ul>
+                    </div>
+
+                    <!-- 空调机房操作记录功能 -->
+                    <div class="border-l-4 border-blue-500 pl-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">✅ 空调机房操作记录功能 2025-06-21</h3>
+                        <p class="text-gray-600 mb-2">新增专业设备监控与数据记录功能</p>
+                        <ul class="text-sm text-gray-500 space-y-1 ml-4">
+                            <li>• 独立的专业操作页面</li>
+                            <li>• 设备开关控制（冷冻水泵、冷却水泵）</li>
+                            <li>• 温度和压力数据记录</li>
+                            <li>• 现场照片上传功能</li>
+                            <li>• 数据存储到WorkLog表的content字段</li>
+                            <li>• 集成用户认证系统</li>
+                        </ul>
+                    </div>
+
+                    <!-- 图片压缩功能 -->
+                    <div class="border-l-4 border-green-500 pl-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">✅ 图片压缩功能 2025-06-20</h3>
+                        <p class="text-gray-600 mb-2">智能图片压缩，节省存储空间</p>
+                        <ul class="text-sm text-gray-500 space-y-1 ml-4">
+                            <li>• 自动压缩图片宽度到1080像素</li>
+                            <li>• 保持图片比例不变</li>
+                            <li>• JPEG格式输出，质量80%</li>
+                            <li>• 压缩进度提示</li>
+                            <li>• 错误处理和用户反馈</li>
+                        </ul>
+                    </div>
+
+                    <!-- 日志删除功能 -->
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">✅ 日志删除功能 2025-06-20</h3>
+                        <p class="text-gray-600 mb-2">安全的日志管理功能</p>
+                        <ul class="text-sm text-gray-500 space-y-1 ml-4">
+                            <li>• 权限控制：只能删除自己发布的日志</li>
+                            <li>• 确认对话框防止误删</li>
+                            <li>• 删除动画效果</li>
+                            <li>• 错误处理和状态反馈</li>
+                        </ul>
+                    </div>
+
+                    
+                </div>
+            </div>
+
+            <!-- 核心功能 -->
+            <div class="version-card bg-white rounded-2xl shadow-sm border border-gray-100 p-6 fade-in">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-2xl font-bold text-gray-900">核心功能</h2>
+                    <span class="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">稳定版</span>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- 用户系统 -->
+                    <div class="border-l-4 border-gray-500 pl-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">🔐 用户认证系统</h3>
+                        <ul class="text-sm text-gray-500 space-y-1 ml-4">
+                            <li>• 用户注册和登录</li>
+                            <li>• 真实姓名管理</li>
+                            <li>• 安全的会话管理</li>
+                        </ul>
+                    </div>
+
+                    <!-- 日志系统 -->
+                    <div class="border-l-4 border-gray-500 pl-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">📝 工作日志系统</h3>
+                        <ul class="text-sm text-gray-500 space-y-1 ml-4">
+                            <li>• 发布工作日志（文本和图片）</li>
+                            <li>• 图片上传和预览</li>
+                            <li>• 无限滚动加载</li>
+                            <li>• 智能时间显示</li>
+                        </ul>
+                    </div>
+
+                    <!-- 界面设计 -->
+                    <div class="border-l-4 border-gray-500 pl-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">🎨 现代化界面</h3>
+                        <ul class="text-sm text-gray-500 space-y-1 ml-4">
+                            <li>• 响应式设计，支持移动端</li>
+                            <li>• TailwindCSS 现代化样式</li>
+                            <li>• 流畅的动画效果</li>
+                            <li>• 直观的用户体验</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 开发计划 -->
+            <div class="version-card bg-white rounded-2xl shadow-sm border border-gray-100 p-6 fade-in">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-2xl font-bold text-gray-900">开发计划</h2>
+                    <span class="bg-yellow-100 text-yellow-800 text-sm font-medium px-3 py-1 rounded-full">规划中</span>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="border-l-4 border-yellow-500 pl-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">🚀 即将推出</h3>
+                        <ul class="text-sm text-gray-500 space-y-1 ml-4">
+                            <li>• 日志编辑功能</li>
+                            <li>• 日志分类和标签</li>
+                            <li>• 搜索功能</li>
+                            <li>• Markdown 格式支持</li>
+                            <li>• 评论功能</li>
+                            <li>• 导出功能</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 技术架构 -->
+            <div class="version-card bg-white rounded-2xl shadow-sm border border-gray-100 p-6 fade-in">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-2xl font-bold text-gray-900">技术架构</h2>
+                    <span class="bg-gray-100 text-gray-800 text-sm font-medium px-3 py-1 rounded-full">技术栈</span>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <h3 class="font-semibold text-gray-800 mb-2">前端技术</h3>
+                        <ul class="text-sm text-gray-600 space-y-1">
+                            <li>• HTML5 + TailwindCSS</li>
+                            <li>• Vanilla JavaScript</li>
+                            <li>• 响应式设计</li>
+                            <li>• 现代化 UI 组件</li>
+                        </ul>
+                    </div>
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <h3 class="font-semibold text-gray-800 mb-2">后端服务</h3>
+                        <ul class="text-sm text-gray-600 space-y-1">
+                            <li>• LeanCloud BaaS</li>
+                            <li>• 用户认证系统</li>
+                            <li>• 数据存储服务</li>
+                            <li>• 文件上传服务</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 返回按钮 -->
+        <div class="text-center mt-8">
+            <a href="index.html" class="inline-flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                <span>返回主页</span>
+            </a>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-gray-200 mt-12">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="text-center text-gray-500 text-sm">
+                <p>工作日志系统 - 持续改进中</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
