@@ -70,6 +70,10 @@ const elements = {
     coolingWaterInletTemp: document.getElementById('coolingWaterInletTemp'),
     coolingWaterOutletTemp: document.getElementById('coolingWaterOutletTemp'),
     vacuumPressure: document.getElementById('vacuumPressure'),
+
+    //水温
+    highZoneWaterTemp: document.getElementById('highZoneWaterTemp'),  
+    lowZoneWaterTemp: document.getElementById('lowZoneWaterTemp'),
     
     // 图片上传
     imageInput: document.getElementById('imageInput'),
@@ -381,7 +385,9 @@ function collectOperationData() {
             highTempGeneratorTemp: elements.highTempGeneratorTemp.value || null,
             coolingWaterInletTemp: elements.coolingWaterInletTemp.value || null,
             coolingWaterOutletTemp: elements.coolingWaterOutletTemp.value || null,
-            vacuumPressure: elements.vacuumPressure.value || null
+            vacuumPressure: elements.vacuumPressure.value || null,
+            highZoneWaterTemp: elements.highZoneWaterTemp.value || null, 
+            lowZoneWaterTemp: elements.lowZoneWaterTemp.value || null
         },
         timestamp: new Date().toLocaleString('zh-CN')
     };
@@ -418,6 +424,14 @@ function formatOperationDataToText(data) {
     }
     if (data.temperatureData.vacuumPressure) {
         text += `- 真空压力：${data.temperatureData.vacuumPressure}kPa\n`;
+    }
+
+    text += `\n水温：\n`; 
+    if (data.temperatureData.highZoneWaterTemp) { 
+        text += `- 高区水温：${data.temperatureData.highZoneWaterTemp}°C\n`;
+    }
+    if (data.temperatureData.lowZoneWaterTemp) { 
+        text += `- 低区水温：${data.temperatureData.lowZoneWaterTemp}°C\n`;
     }
     
     return text;
