@@ -1,6 +1,6 @@
 /**
- * 空调机房操作记录应用
- * 功能：用户认证、设备状态记录、温度数据记录、图片上传
+ * 净水器操作记录应用
+ * 功能：用户认证、净水器设备状态记录、水位监测、加压泵组状态记录、图片上传
  */
 
 // LeanCloud 配置（与主应用保持一致）
@@ -59,21 +59,17 @@ const elements = {
     showLoginBtn: document.getElementById('showLoginBtn'),
     modalTitle: document.getElementById('modalTitle'),
     
-    // 设备控制
-    chilledWaterPump: document.getElementById('chilledWaterPump'),
-    coolingWaterPump: document.getElementById('coolingWaterPump'),
+    // 净水器设备控制
+    waterFilterSwitch: document.getElementById('waterFilterSwitch'),
     
-    // 温度和压力输入
-    chilledWaterInletTemp: document.getElementById('chilledWaterInletTemp'),
-    chilledWaterOutletTemp: document.getElementById('chilledWaterOutletTemp'),
-    highTempGeneratorTemp: document.getElementById('highTempGeneratorTemp'),
-    coolingWaterInletTemp: document.getElementById('coolingWaterInletTemp'),
-    coolingWaterOutletTemp: document.getElementById('coolingWaterOutletTemp'),
-    vacuumPressure: document.getElementById('vacuumPressure'),
-
-    //水温
-    highZoneWaterTemp: document.getElementById('highZoneWaterTemp'),  
-    lowZoneWaterTemp: document.getElementById('lowZoneWaterTemp'),
+    // 水位监测
+    tapWaterLevel: document.getElementById('tapWaterLevel'),
+    purifiedWaterLevel: document.getElementById('purifiedWaterLevel'),
+    
+    // 加压泵组控制
+    rdBuildingPump: document.getElementById('rdBuildingPump'),
+    highZonePump: document.getElementById('highZonePump'),
+    lowZonePump: document.getElementById('lowZonePump'),
     
     // 图片上传
     imageInput: document.getElementById('imageInput'),
@@ -212,7 +208,7 @@ async function handleLogin(e) {
     const password = document.getElementById('loginPassword').value;
     
     if (!username || !password) {
-        showMessage('请输入用户名和密码', 'error');
+        showMessage('请填写完整的登录信息', 'error');
         return;
     }
     
@@ -239,7 +235,7 @@ async function handleRegister(e) {
     const confirmPassword = document.getElementById('confirmPassword').value;
     
     if (!username || !realName || !password || !confirmPassword) {
-        showMessage('请填写所有字段', 'error');
+        showMessage('请填写完整的注册信息', 'error');
         return;
     }
     
@@ -272,7 +268,7 @@ async function handleLogout() {
         await AV.User.logOut();
         currentUser = null;
         showLoginPrompt();
-        showMessage('已退出登录', 'success');
+        showMessage('已退出登录', 'info');
     } catch (error) {
         console.error('退出登录失败:', error);
         showMessage('退出登录失败: ' + error.message, 'error');
@@ -280,15 +276,13 @@ async function handleLogout() {
 }
 
 /**
- * 设置图片预览
+ * 设置图片预览功能
  */
 function setupImagePreview() {
-    elements.imageInput.addEventListener('change', function(e) {
-        const files = e.target.files;
+    elements.imageInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
         if (files.length > 0) {
             showImagePreview(files);
-        } else {
-            elements.imagePreview.classList.add('hidden');
         }
     });
 }
@@ -300,9 +294,9 @@ function showImagePreview(files) {
     elements.imagePreview.innerHTML = '';
     elements.imagePreview.classList.remove('hidden');
     
-    Array.from(files).forEach((file, index) => {
+    files.forEach((file, index) => {
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = (e) => {
             const img = document.createElement('img');
             img.src = e.target.result;
             img.className = 'w-full h-24 object-cover rounded-lg';
@@ -314,127 +308,102 @@ function showImagePreview(files) {
 }
 
 /**
- * 压缩图片到指定宽度
+ * 压缩图片
  */
 function compressImage(file, maxWidth = 1080, quality = 0.8) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const img = new Image();
         
-        img.onload = function() {
-            let { width, height } = img;
+        img.onload = () => {
+            const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
+            canvas.width = img.width * ratio;
+            canvas.height = img.height * ratio;
             
-            if (width > maxWidth) {
-                height = (height * maxWidth) / width;
-                width = maxWidth;
-            }
-            
-            canvas.width = width;
-            canvas.height = height;
-            ctx.drawImage(img, 0, 0, width, height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             canvas.toBlob(resolve, 'image/jpeg', quality);
         };
         
-        img.onerror = reject;
         img.src = URL.createObjectURL(file);
     });
 }
 
 /**
- * 上传图片
+ * 上传图片到 LeanCloud
  */
 async function uploadImages() {
-    const files = elements.imageInput.files;
-    const images = [];
+    const files = Array.from(elements.imageInput.files);
+    if (files.length === 0) return [];
     
-    for (let i = 0; i < files.length; i++) {
+    const uploadPromises = files.map(async (file) => {
         try {
-            const compressedBlob = await compressImage(files[i]);
-            const originalName = files[i].name;
-            const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.')) || originalName;
-            const compressedFileName = `aircondition_${nameWithoutExt}_compressed.jpg`;
-            
-            const file = new AV.File(compressedFileName, compressedBlob);
-            const savedFile = await file.save();
-            images.push(savedFile.url());
-            
-            console.log(`图片 ${originalName} 压缩并上传成功`);
+            const compressedFile = await compressImage(file);
+            const avFile = new AV.File(`waterfilter_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.jpg`, compressedFile);
+            const savedFile = await avFile.save();
+            return savedFile.url();
         } catch (error) {
-            console.error('图片压缩或上传失败:', error);
-            showMessage(`图片 ${files[i].name} 处理失败`, 'error');
+            console.error('图片上传失败:', error);
+            throw error;
         }
-    }
+    });
     
-    return images;
+    return Promise.all(uploadPromises);
 }
 
 /**
  * 收集操作数据
  */
 function collectOperationData() {
-    const data = {
-        deviceName: '空调机房',
-        equipmentStatus: {
-            chilledWaterPump: elements.chilledWaterPump.checked ? '开' : '关',
-            coolingWaterPump: elements.coolingWaterPump.checked ? '开' : '关'
-        },
-        temperatureData: {
-            chilledWaterInletTemp: elements.chilledWaterInletTemp.value || null,
-            chilledWaterOutletTemp: elements.chilledWaterOutletTemp.value || null,
-            highTempGeneratorTemp: elements.highTempGeneratorTemp.value || null,
-            coolingWaterInletTemp: elements.coolingWaterInletTemp.value || null,
-            coolingWaterOutletTemp: elements.coolingWaterOutletTemp.value || null,
-            vacuumPressure: elements.vacuumPressure.value || null,
-            highZoneWaterTemp: elements.highZoneWaterTemp.value || null, 
-            lowZoneWaterTemp: elements.lowZoneWaterTemp.value || null
-        },
-        timestamp: new Date().toLocaleString('zh-CN')
+    return {
+        // 净水器设备状态
+        waterFilterSwitch: elements.waterFilterSwitch.checked,
+        
+        // 水位监测数据
+        tapWaterLevel: parseFloat(elements.tapWaterLevel.value) || null,
+        purifiedWaterLevel: parseFloat(elements.purifiedWaterLevel.value) || null,
+        
+        // 加压泵组状态
+        rdBuildingPump: elements.rdBuildingPump.checked,
+        highZonePump: elements.highZonePump.checked,
+        lowZonePump: elements.lowZonePump.checked,
+        
+        // 时间戳
+        timestamp: new Date().toISOString()
     };
-    
-    return data;
 }
 
 /**
- * 格式化操作数据为文本
+ * 将操作数据格式化为文本
  */
 function formatOperationDataToText(data) {
-    let text = `【${data.deviceName}操作记录】\n`;
-    text += `记录时间：${data.timestamp}\n\n`;
+    const formatTime = new Date(data.timestamp).toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
     
-    text += `设备状态：\n`;
-    text += `- 冷冻水泵：${data.equipmentStatus.chilledWaterPump}\n`;
-    text += `- 冷却水泵：${data.equipmentStatus.coolingWaterPump}\n\n`;
+    let content = `净水器操作记录 - ${formatTime}\n\n`;
     
-    text += `温度和压力数据：\n`;
-    if (data.temperatureData.chilledWaterInletTemp) {
-        text += `- 冷水入口温度：${data.temperatureData.chilledWaterInletTemp}°C\n`;
-    }
-    if (data.temperatureData.chilledWaterOutletTemp) {
-        text += `- 冷水出口温度：${data.temperatureData.chilledWaterOutletTemp}°C\n`;
-    }
-    if (data.temperatureData.highTempGeneratorTemp) {
-        text += `- 高温发生器温度：${data.temperatureData.highTempGeneratorTemp}°C\n`;
-    }
-    if (data.temperatureData.coolingWaterInletTemp) {
-        text += `- 冷却水入口温度：${data.temperatureData.coolingWaterInletTemp}°C\n`;
-    }
-    if (data.temperatureData.coolingWaterOutletTemp) {
-        text += `- 冷却水出口温度：${data.temperatureData.coolingWaterOutletTemp}°C\n`;
-    }
-    if (data.temperatureData.vacuumPressure) {
-        text += `- 真空压力：${data.temperatureData.vacuumPressure}kPa\n`;
-    }
-
-    text += `\n水温：\n`; 
-    if (data.temperatureData.highZoneWaterTemp) { 
-        text += `- 高区水温：${data.temperatureData.highZoneWaterTemp}°C\n`;
-    }
-    if (data.temperatureData.lowZoneWaterTemp) { 
-        text += `- 低区水温：${data.temperatureData.lowZoneWaterTemp}°C\n`;
-    }
+    // 设备状态
+    content += '=== 净水器设备状态 ===\n';
+    content += `净水器开关: ${data.waterFilterSwitch ? '开启' : '关闭'}\n\n`;
     
-    return text;
+    // 水位监测
+    content += '=== 水位监测 ===\n';
+    content += `自来水箱水位: ${data.tapWaterLevel !== null ? data.tapWaterLevel + '%' : '未记录'}\n`;
+    content += `纯净水箱水位: ${data.purifiedWaterLevel !== null ? data.purifiedWaterLevel + '%' : '未记录'}\n\n`;
+    
+    // 加压泵组状态
+    content += '=== 加压泵组状态 ===\n';
+    content += `研发楼加压泵: ${data.rdBuildingPump ? '运行' : '停止'}\n`;
+    content += `高区加压泵: ${data.highZonePump ? '运行' : '停止'}\n`;
+    content += `低区加压泵: ${data.lowZonePump ? '运行' : '停止'}\n\n`;
+    
+    return content;
 }
 
 /**
@@ -446,60 +415,52 @@ async function handleSubmit() {
         return;
     }
     
-    // 收集数据
-    const operationData = collectOperationData();
-    
-    // 检查是否有数据输入
-    const hasEquipmentData = elements.chilledWaterPump.checked || elements.coolingWaterPump.checked;
-    const hasTemperatureData = Object.values(operationData.temperatureData).some(value => value !== null);
-    const hasImages = elements.imageInput.files.length > 0;
-    
-    if (!hasEquipmentData && !hasTemperatureData && !hasImages) {
-        showMessage('请至少填写一项数据或上传图片', 'error');
-        return;
-    }
+    // 禁用提交按钮，防止重复提交
+    elements.submitBtn.disabled = true;
+    elements.submitBtn.textContent = '提交中...';
     
     try {
-        // 显示提交中状态
-        elements.submitBtn.disabled = true;
-        elements.submitBtn.textContent = '提交中...';
+        // 收集操作数据
+        const operationData = collectOperationData();
         
-        // 创建WorkLog记录
-        const Log = AV.Object.extend('WorkLog');
-        const log = new Log();
-        
-        // 格式化内容
-        const content = formatOperationDataToText(operationData);
-        log.set('content', content);
-        log.set('author', currentUser);
-        
-        // 优先使用真实姓名
-        const authorName = currentUser.get('realName') || currentUser.get('username');
-        log.set('authorName', authorName);
-        
-        // 处理图片上传
-        const fileCount = elements.imageInput.files.length;
-        if (fileCount > 0) {
-            showMessage(`正在压缩并上传 ${fileCount} 张图片...`, 'info');
-            const images = await uploadImages();
-            if (images.length > 0) {
-                log.set('images', images);
-                showMessage(`${images.length} 张图片上传成功`, 'success');
-            }
+        // 上传图片
+        let imageUrls = [];
+        if (elements.imageInput.files.length > 0) {
+            showMessage('正在上传图片...', 'info');
+            imageUrls = await uploadImages();
         }
         
-        // 保存记录
-        await log.save();
+        // 格式化数据为文本
+        let content = formatOperationDataToText(operationData);
         
-        // 重置表单
+        // 添加图片信息
+        if (imageUrls.length > 0) {
+            content += '=== 现场照片 ===\n';
+            imageUrls.forEach((url, index) => {
+                content += `图片${index + 1}: ${url}\n`;
+            });
+        }
+        
+        // 保存到 LeanCloud WorkLog 表
+        const WorkLog = AV.Object.extend('WorkLog');
+        const workLog = new WorkLog();
+        
+        workLog.set('content', content);
+        workLog.set('author', currentUser.get('realName') || currentUser.get('username'));
+        workLog.set('type', '净水器操作记录');
+        workLog.set('images', imageUrls);
+        workLog.set('operationData', operationData);
+        
+        await workLog.save();
+        
+        showMessage('净水器操作记录提交成功！', 'success');
         resetForm();
         
-        showMessage('操作记录提交成功！', 'success');
     } catch (error) {
         console.error('提交失败:', error);
         showMessage('提交失败: ' + error.message, 'error');
     } finally {
-        // 恢复按钮状态
+        // 恢复提交按钮
         elements.submitBtn.disabled = false;
         elements.submitBtn.textContent = '提交操作记录';
     }
@@ -509,34 +470,37 @@ async function handleSubmit() {
  * 重置表单
  */
 function resetForm() {
-    // 重置开关
-    elements.chilledWaterPump.checked = false;
-    elements.coolingWaterPump.checked = false;
+    // 重置设备开关
+    elements.waterFilterSwitch.checked = false;
     
-    // 重置温度输入
-    elements.chilledWaterInletTemp.value = '';
-    elements.chilledWaterOutletTemp.value = '';
-    elements.highTempGeneratorTemp.value = '';
-    elements.coolingWaterInletTemp.value = '';
-    elements.coolingWaterOutletTemp.value = '';
-    elements.vacuumPressure.value = '';
+    // 重置水位输入
+    elements.tapWaterLevel.value = '';
+    elements.purifiedWaterLevel.value = '';
     
-    // 重置图片
+    // 重置加压泵组开关
+    elements.rdBuildingPump.checked = false;
+    elements.highZonePump.checked = false;
+    elements.lowZonePump.checked = false;
+    
+    // 重置图片上传
     elements.imageInput.value = '';
-    elements.imagePreview.classList.add('hidden');
     elements.imagePreview.innerHTML = '';
+    elements.imagePreview.classList.add('hidden');
 }
 
 /**
  * 显示消息提示
  */
 function showMessage(message, type = 'info') {
+    const colors = {
+        success: 'bg-green-500',
+        error: 'bg-red-500',
+        info: 'bg-blue-500',
+        warning: 'bg-yellow-500'
+    };
+    
     const messageDiv = document.createElement('div');
-    messageDiv.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm ${
-        type === 'success' ? 'bg-green-500 text-white' :
-        type === 'error' ? 'bg-red-500 text-white' :
-        'bg-blue-500 text-white'
-    }`;
+    messageDiv.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 fade-in`;
     messageDiv.textContent = message;
     
     document.body.appendChild(messageDiv);
@@ -550,15 +514,13 @@ function showMessage(message, type = 'info') {
  * 启动应用
  */
 function startApp() {
-    if (!initLeanCloud()) {
-        return;
-    }
-    
-    // 等待DOM完全加载后初始化
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initApp);
-    } else {
-        initApp();
+    if (initLeanCloud()) {
+        // 等待 DOM 完全加载
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
     }
 }
 
