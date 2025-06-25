@@ -445,13 +445,36 @@ async function handleSubmit() {
         const WorkLog = AV.Object.extend('WorkLog');
         const workLog = new WorkLog();
         
-        workLog.set('content', content);
-        workLog.set('author', currentUser.get('realName') || currentUser.get('username'));
-        workLog.set('type', '净水器操作记录');
-        workLog.set('images', imageUrls);
-        workLog.set('operationData', operationData);
+        // 优先使用真实姓名
+        const authorName = currentUser.get('realName') || currentUser.get('username');
         
-        await workLog.save();
+        // 设置基本字段
+        workLog.set('content', content);
+        workLog.set('author', currentUser);
+        workLog.set('authorName', authorName);
+        workLog.set('type', '净水器操作记录');
+        
+        // 分别设置图片和操作数据，避免单次提交数据过大
+        if (imageUrls.length > 0) {
+            workLog.set('images', imageUrls);
+        }
+        
+        // 简化操作数据，只保存关键信息
+        const simplifiedData = {
+            waterFilterSwitch: operationData.waterFilterSwitch,
+            tapWaterLevel: operationData.tapWaterLevel,
+            purifiedWaterLevel: operationData.purifiedWaterLevel,
+            rdBuildingPump: operationData.rdBuildingPump,
+            highZonePump: operationData.highZonePump,
+            lowZonePump: operationData.lowZonePump,
+            timestamp: operationData.timestamp
+        };
+        workLog.set('operationData', simplifiedData);
+        
+        // 使用更短的超时时间和重试机制
+        await workLog.save(null, {
+            timeout: 10000 // 10秒超时
+        });
         
         showMessage('净水器操作记录提交成功！', 'success');
         resetForm();

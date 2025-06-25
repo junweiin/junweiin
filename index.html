@@ -110,6 +110,31 @@
             border: none;
             outline: none;
         }
+        
+        /* 长链接和长文本换行处理 */
+        .break-words {
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        .overflow-wrap-anywhere {
+            overflow-wrap: anywhere;
+        }
+        
+        /* 确保链接在所有浏览器中都能正确换行 */
+        .log-content {
+            word-break: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+            -webkit-hyphens: auto;
+            -ms-hyphens: auto;
+        }
+        
+        /* 处理超长URL */
+        .log-content a {
+            word-break: break-all;
+            overflow-wrap: break-word;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -118,8 +143,8 @@
         <div class="max-w-4xl mx-auto px-4 py-3">
             <div class="flex justify-between items-center">
                 <h1 class="text-xl font-semibold text-gray-800">工作日志</h1>
-                <div id="userInfo" class="hidden items-center space-x-2 sm:space-x-4">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-2 text-right sm:text-left">
+                <div id="userInfo" class="hidden flex items-center space-x-2 sm:space-x-4">
+                    <div class="flex items-center space-x-2">
                         <div class="flex items-center space-x-1">
                             <span id="realName" class="text-gray-800 font-medium text-sm sm:text-base cursor-pointer hover:text-blue-600 transition-colors"></span>
                             <button id="editRealNameBtn" class="text-gray-400 hover:text-blue-600 transition-colors btn-fix" title="编辑真实姓名">
@@ -421,6 +446,42 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <!-- 引入模块化JS文件 -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/base-app.js"></script>
+    <script src="js/modules/main-page.js"></script>
+    
+    <script>
+        // 初始化主页应用
+        let mainApp;
+        
+        // 为了向后兼容，也声明mainPageApp
+        window.mainPageApp = null;
+        
+        // 等待DOM和LeanCloud SDK加载完成
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查LeanCloud SDK是否加载
+            function checkAndInitApp() {
+                if (typeof AV !== 'undefined') {
+                    try {
+                        mainApp = new MainPageApp();
+                        window.mainPageApp = mainApp; // 让mainPageApp成为全局变量，供HTML onclick使用
+                        mainApp.init();
+                        console.log('主页应用初始化成功');
+                    } catch (error) {
+                        console.error('主页应用初始化失败:', error);
+                        WorkLogUtils.showMessage('应用初始化失败: ' + error.message, 'error');
+                    }
+                } else {
+                    // 如果SDK还没加载，等待一段时间后重试
+                    setTimeout(checkAndInitApp, 100);
+                }
+            }
+            
+            checkAndInitApp();
+        });
+    </script>
 </body>
 </html>
