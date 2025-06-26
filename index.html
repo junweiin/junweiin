@@ -312,7 +312,6 @@
                     <button id="closeModal" class="text-gray-400 hover:text-gray-600 text-2xl btn-fix">&times;</button>
                 </div>
             </div>
-            
             <div class="p-4">
                 <!-- 登录表单 -->
                 <form id="loginForm" class="space-y-4">
@@ -342,73 +341,6 @@
                             class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg transition-colors text-sm font-medium btn-fix"
                         >
                             登录
-                        </button>
-                        <button 
-                            type="button" 
-                            id="showRegisterBtn" 
-                            class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg transition-colors text-sm font-medium btn-fix"
-                        >
-                            注册新账号
-                        </button>
-                    </div>
-                </form>
-                
-                <!-- 注册表单 -->
-                <form id="registerForm" class="space-y-4 hidden">
-                    <div>
-                        <label for="registerUsername" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
-                        <input 
-                            type="text" 
-                            id="registerUsername" 
-                            autocomplete="username"
-                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                            required
-                        >
-                    </div>
-                    <div>
-                        <label for="registerRealName" class="block text-sm font-medium text-gray-700 mb-1">真实姓名</label>
-                        <input 
-                            type="text" 
-                            id="registerRealName" 
-                            autocomplete="name"
-                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                            required
-                            placeholder="请输入您的真实姓名"
-                        >
-                    </div>
-                    <div>
-                        <label for="registerPassword" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
-                        <input 
-                            type="password" 
-                            id="registerPassword" 
-                            autocomplete="new-password"
-                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                            required
-                        >
-                    </div>
-                    <div>
-                        <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-1">确认密码</label>
-                        <input 
-                            type="password" 
-                            id="confirmPassword" 
-                            autocomplete="new-password"
-                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                            required
-                        >
-                    </div>
-                    <div class="flex flex-col sm:flex-row gap-3 pt-2">
-                        <button 
-                            type="submit" 
-                            class="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg transition-colors text-sm font-medium btn-fix"
-                        >
-                            注册
-                        </button>
-                        <button 
-                            type="button" 
-                            id="showLoginBtn" 
-                            class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg transition-colors text-sm font-medium btn-fix"
-                        >
-                            返回登录
                         </button>
                     </div>
                 </form>
