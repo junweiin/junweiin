@@ -411,6 +411,11 @@
                         window.mainPageApp = mainApp; // 同时赋值给全局变量
                         mainApp.init();
                         console.log('主页应用初始化成功');
+                        
+                        // 页面加载时检查登录状态并更新统计
+                        if (WorkLogAuth.getCurrentUser()) {
+                            updateMyPostCount();
+                        }
                     } catch (error) {
                         console.error('主页应用初始化失败:', error);
                         WorkLogUtils.showMessage('应用初始化失败: ' + error.message, 'error');

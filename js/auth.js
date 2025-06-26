@@ -210,6 +210,10 @@ const WorkLogAuth = {
             // 触发登出事件
             window.dispatchEvent(new CustomEvent('userLoggedOut'));
             
+            // 登出时清理统计显示
+            const el = document.getElementById('myPostCount');
+            if (el) el.textContent = '--';
+            
         } catch (error) {
             console.error('登出失败:', error);
             WorkLogUtils.showMessage('登出失败: ' + error.message, 'error');
