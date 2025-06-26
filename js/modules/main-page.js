@@ -219,7 +219,10 @@ class MainPageApp extends BaseWorkLogApp {
             // 上传图片
             const images = await this.uploadImages();
             // 提交日志
-            const formData = { content };
+            const formData = { 
+                content,
+                operationRecord: "常规工作记录" // 添加默认操作记录
+            };
             try {
                 await this.submitWorkLog(formData, images, content);
                 WorkLogUtils.showMessage('日志发布成功！', 'success');
