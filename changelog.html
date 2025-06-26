@@ -60,22 +60,47 @@
                 </div>
                 
                 <div class="space-y-4">
-                    <div class="border-l-4 border-blue-600 pl-4">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-2">🐞 前端问题修复 2025-06-25</h3>
-                    <p class="text-gray-600 mb-2">修复了多个前端显示与交互相关的 bug，提升了系统稳定性和用户体验：</p>
-                    <ul class="text-sm text-gray-500 space-y-1 ml-4">
-                        <li>• LeanCloud createdAt 字段冲突错误：移除手动设置，避免保留字段冲突</li>
-                        <li>• openImageModal 递归调用导致栈溢出：优化模态框创建与关闭逻辑，防止死循环</li>
-                        <li>• 日志列表显示“未知用户”问题：完善用户名获取逻辑，兼容历史数据</li>
-                        <li>• 头部用户信息布局错乱：调整 CSS，确保用户名与退出按钮同列显示</li>
-                        <li>• 长链接超出页面：新增多重换行策略，优化超长文本显示</li>
-                        <li>• 删除弃用 JS 文件：清理根目录下已被替代的旧 JS 文件</li>
-                        <li>• 历史日志用户名显示异常：兼容 authorName 字段，完善显示逻辑</li>
-                        <li>• 图片预览报错：修复 openImageModal 递归问题，增强模态框健壮性</li>
-                        <li>• mainPageApp 未定义：全局声明并赋值，保证 HTML 事件正常调用</li>
-                    </ul>
-                </div>
+                    <!-- 2025-06-26 -->
+                    <div class="border-l-4 border-green-500 pl-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">✅ 高压配电房操作记录优化 2025-06-26</h3>
+                        <p class="text-gray-600 mb-2">对高压配电房操作记录功能进行了多项优化：</p>
+                        <ul class="text-sm text-gray-500 space-y-1 ml-4">
+                            <li>• 移除operationRecord字段的强制验证，允许用户自由填写</li>
+                            <li>• 优化表单提交逻辑，提升用户体验</li>
+                            <li>• 修复表单验证错误提示问题</li>
+                        </ul>
+                    </div>
 
+                    <!-- 2025-06-25 -->
+                    <div class="border-l-4 border-blue-600 pl-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">🐞 前端问题修复 2025-06-25</h3>
+                        <p class="text-gray-600 mb-2">修复了多个前端显示与交互相关的 bug，提升了系统稳定性和用户体验：</p>
+                        <ul class="text-sm text-gray-500 space-y-1 ml-4">
+                            <li>• LeanCloud createdAt 字段冲突错误：移除手动设置，避免保留字段冲突</li>
+                            <li>• openImageModal 递归调用导致栈溢出：优化模态框创建与关闭逻辑，防止死循环</li>
+                            <li>• 日志列表显示"未知用户"问题：完善用户名获取逻辑，兼容历史数据</li>
+                            <li>• 头部用户信息布局错乱：调整 CSS，确保用户名与退出按钮同列显示</li>
+                            <li>• 长链接超出页面：新增多重换行策略，优化超长文本显示</li>
+                            <li>• 删除弃用 JS 文件：清理根目录下已被替代的旧 JS 文件</li>
+                            <li>• 历史日志用户名显示异常：兼容 authorName 字段，完善显示逻辑</li>
+                            <li>• 图片预览报错：修复 openImageModal 递归问题，增强模态框健壮性</li>
+                            <li>• mainPageApp 未定义：全局声明并赋值，保证 HTML 事件正常调用</li>
+                            <li>• 高压配电房操作记录表单验证：移除强制验证，允许用户自由填写</li>
+                        </ul>
+                    </div>
+
+                    <div class="border-l-4 border-blue-400 pl-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">📦 离线模式与缓存优化 2025-06-25</h3>
+                        <p class="text-gray-600 mb-2">实现了全站离线录入与静态资源缓存，提升了系统可用性和访问速度：</p>
+                        <ul class="text-sm text-gray-500 space-y-1 ml-4">
+                            <li>• 首页、空调机房、高压配电房、净水器等页面均支持离线录入，断网时可正常填写，联网后自动同步</li>
+                            <li>• 离线数据自动补发到 LeanCloud 并推送企业微信群</li>
+                            <li>• 集成 Service Worker，页面及静态资源自动缓存，提升二次访问速度</li>
+                            <li>• 离线机制与主流浏览器和微信内置浏览器兼容</li>
+                        </ul>
+                    </div>
+
+                    <!-- 2025-06-24 -->
                     <div class="border-l-4 border-orange-500 pl-4">
                         <h3 class="text-lg font-semibold text-gray-800 mb-2">🔧 记录模板 2025-06-24</h3>
                         <p class="text-gray-600 mb-2">新增一些页面</p>
@@ -86,7 +111,7 @@
                         </ul>
                     </div>
 
-                    <!-- 工程报修登记 -->
+                    <!-- 2025-06-21 -->
                     <div class="border-l-4 border-orange-500 pl-4">
                         <h3 class="text-lg font-semibold text-gray-800 mb-2">🔧 工程报修登记 2025-06-21</h3>
                         <p class="text-gray-600 mb-2">集成外部报修系统</p>
@@ -97,7 +122,6 @@
                         </ul>
                     </div>
 
-                    <!-- 空调机房操作记录功能 -->
                     <div class="border-l-4 border-blue-500 pl-4">
                         <h3 class="text-lg font-semibold text-gray-800 mb-2">✅ 空调机房操作记录功能 2025-06-21</h3>
                         <p class="text-gray-600 mb-2">新增专业设备监控与数据记录功能</p>
@@ -111,7 +135,7 @@
                         </ul>
                     </div>
 
-                    <!-- 图片压缩功能 -->
+                    <!-- 2025-06-20 -->
                     <div class="border-l-4 border-green-500 pl-4">
                         <h3 class="text-lg font-semibold text-gray-800 mb-2">✅ 图片压缩功能 2025-06-20</h3>
                         <p class="text-gray-600 mb-2">智能图片压缩，节省存储空间</p>
@@ -124,7 +148,6 @@
                         </ul>
                     </div>
 
-                    <!-- 日志删除功能 -->
                     <div class="border-l-4 border-purple-500 pl-4">
                         <h3 class="text-lg font-semibold text-gray-800 mb-2">✅ 日志删除功能 2025-06-20</h3>
                         <p class="text-gray-600 mb-2">安全的日志管理功能</p>
@@ -133,17 +156,6 @@
                             <li>• 确认对话框防止误删</li>
                             <li>• 删除动画效果</li>
                             <li>• 错误处理和状态反馈</li>
-                        </ul>
-                    </div>
-
-                    <div class="border-l-4 border-blue-400 pl-4">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-2">📦 离线模式与缓存优化 2025-06-25</h3>
-                        <p class="text-gray-600 mb-2">实现了全站离线录入与静态资源缓存，提升了系统可用性和访问速度：</p>
-                        <ul class="text-sm text-gray-500 space-y-1 ml-4">
-                            <li>• 首页、空调机房、高压配电房、净水器等页面均支持离线录入，断网时可正常填写，联网后自动同步</li>
-                            <li>• 离线数据自动补发到 LeanCloud 并推送企业微信群</li>
-                            <li>• 集成 Service Worker，页面及静态资源自动缓存，提升二次访问速度</li>
-                            <li>• 离线机制与主流浏览器和微信内置浏览器兼容</li>
                         </ul>
                     </div>
                 </div>
