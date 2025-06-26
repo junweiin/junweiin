@@ -419,11 +419,6 @@ class PowerStationApp extends BaseWorkLogApp {
             return;
         }
         const formData = this.collectFormData();
-        const validation = WorkLogUtils.validateFormData(formData, ['operationRecord']);
-        if (!validation.isValid) {
-            WorkLogUtils.showMessage(validation.message, 'warning');
-            return;
-        }
         const originalText = this.elements.submitBtn?.textContent;
         try {
             if (this.elements.submitBtn) {
