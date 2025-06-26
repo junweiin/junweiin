@@ -299,6 +299,8 @@ class MainPageApp extends BaseWorkLogApp {
             const query = new AV.Query(WorkLog);
             
             query.include('user');
+            // 置顶日志优先，然后按时间倒序
+            query.addDescending('isPinned');
             query.descending('createdAt');
             query.limit(WORKLOG_CONFIG.APP.PAGE_SIZE);
             query.skip(this.currentPage * WORKLOG_CONFIG.APP.PAGE_SIZE);
@@ -331,7 +333,8 @@ class MainPageApp extends BaseWorkLogApp {
      */
     renderLogItem(log) {
         const logElement = document.createElement('div');
-        logElement.className = 'bg-white rounded-lg shadow-md p-6 mb-4 log-item';
+        const isPinned = log.get('isPinned') === true;
+        logElement.className = `bg-white rounded-lg shadow-md p-6 mb-4 log-item ${isPinned ? 'border-l-4 border-yellow-500' : ''}`;
         logElement.dataset.logId = log.id;
         
         const user = log.get('user');
@@ -369,9 +372,9 @@ class MainPageApp extends BaseWorkLogApp {
         // 页面类型标签
         const pageTypeLabels = {
             'main': '工作日志',
-            'powerstation': '变电站',
-            'waterfilter': '净水厂',
-            'aircondition': '空调系统'
+            'powerstation': '高压配电记录',
+            'waterfilter': '水处理记录',
+            'aircondition': '空调记录',
         };
         
         const pageTypeLabel = pageTypeLabels[pageType] || '工作日志';
@@ -392,15 +395,34 @@ class MainPageApp extends BaseWorkLogApp {
             `;
         }
         
-        // 删除按钮（仅对当前用户的日志显示）
-        let deleteButtonHtml = '';
-        if (this.currentUser && user && user.id === this.currentUser.id) {
-            deleteButtonHtml = `
-                <button onclick="mainPageApp.handleDeleteLog('${log.id}', this.closest('.log-item'))" 
-                        class="text-red-500 hover:text-red-700 text-sm">
-                    删除
-                </button>
-            `;
+        // 操作按钮（删除和置顶）
+        let actionButtonsHtml = '';
+        if (this.currentUser && user) {
+            const isPinned = log.get('isPinned') === true;
+            // 检查用户权限 - 使用roles字段判断管理员权限
+            const userRoles = this.currentUser.get('roles') || [];
+            const isAdmin = userRoles.includes('admin');
+            
+            // 删除按钮（仅对当前用户的日志显示）
+            if (user.id === this.currentUser.id) {
+                actionButtonsHtml += `
+                    <button onclick="mainPageApp.handleDeleteLog('${log.id}', this.closest('.log-item'))" 
+                            class="text-red-500 hover:text-red-700 text-sm">
+                        删除
+                    </button>
+                `;
+            }
+            
+            // 置顶按钮（仅管理员可见）
+            if (isAdmin) {
+                actionButtonsHtml += `
+                    <button onclick="if(!confirm('确定要${isPinned ? '取消置顶' : '置顶'}此日志吗？')) return false; 
+                                   mainPageApp.togglePinLog('${log.id}', ${isPinned}, this.closest('.log-item'))" 
+                            class="ml-2 ${isPinned ? 'text-yellow-500 hover:text-yellow-700' : 'text-gray-500 hover:text-gray-700'} text-sm">
+                        ${isPinned ? '取消置顶' : '置顶'}
+                    </button>
+                `;
+            }
         }
         
         logElement.innerHTML = `
@@ -411,7 +433,7 @@ class MainPageApp extends BaseWorkLogApp {
                 </div>
                 <div class="flex items-center space-x-2">
                     <span class="text-gray-500 text-sm">${WorkLogUtils.getTimeAgo(createdAt)}</span>
-                    ${deleteButtonHtml}
+                    ${actionButtonsHtml}
                 </div>
             </div>
             <div class="text-gray-700 whitespace-pre-wrap break-words overflow-wrap-anywhere log-content">${content}</div>
@@ -446,6 +468,32 @@ class MainPageApp extends BaseWorkLogApp {
         } catch (error) {
             console.error('删除日志失败:', error);
             WorkLogUtils.showMessage('删除失败: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * 切换日志置顶状态
+     */
+    async togglePinLog(logId, isPinned, logElement) {
+        try {
+            const WorkLog = AV.Object.extend('WorkLog');
+            const log = AV.Object.createWithoutData('WorkLog', logId);
+            log.set('isPinned', !isPinned);
+            await log.save();
+            
+            WorkLogUtils.showMessage(`日志已${isPinned ? '取消置顶' : '置顶'}`, 'success');
+            
+            // 刷新当前日志项
+            if (logElement) {
+                const query = new AV.Query(WorkLog);
+                query.include('user');
+                const updatedLog = await query.get(logId);
+                this.renderLogItem(updatedLog, logElement);
+            }
+            
+        } catch (error) {
+            console.error('置顶操作失败:', error);
+            WorkLogUtils.showMessage('操作失败: ' + error.message, 'error');
         }
     }
 
