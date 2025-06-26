@@ -1,4 +1,4 @@
-const CACHE_NAME = 'worklog-cache-v1';
+const CACHE_NAME = 'worklog-cache-v2';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -9,14 +9,19 @@ const urlsToCache = [
   '/js/modules/main-page.js',
   '/favicon.svg',
   '/aircondition.html',
-  'js/modules/aircondition.js',
-  // 可根据实际情况添加其它页面和静态资源
+  '/js/modules/aircondition.js',
+  'https://cdn.tailwindcss.com',
+  'https://unpkg.com/leancloud-storage@4.15.2/dist/av-min.js'
 ];
 
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(urlsToCache);
+      return cache.addAll(urlsToCache).catch(error => {
+        console.error('缓存添加失败:', error);
+        // 即使部分资源缓存失败也继续安装
+        return Promise.resolve();
+      });
     })
   );
 });

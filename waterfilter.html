@@ -196,12 +196,12 @@
                 <h2 class="text-lg font-semibold text-gray-800 mb-4">水位监测</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label for="tapWaterLevel" class="block text-sm font-medium text-gray-700 mb-2">自来水箱水位 (%)</label>
-                        <input type="number" id="tapWaterLevel" min="0" max="100" step="1" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="请输入水位百分比">
+                        <label for="tapWaterLevel" class="block text-sm font-medium text-gray-700 mb-2">自来水箱水位 (m)</label>
+                        <input type="number" id="tapWaterLevel" min="0" max="10" step="0.1" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="请输入水位高度">
                     </div>
                     <div>
-                        <label for="purifiedWaterLevel" class="block text-sm font-medium text-gray-700 mb-2">纯净水箱水位 (%)</label>
-                        <input type="number" id="purifiedWaterLevel" min="0" max="100" step="1" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="请输入水位百分比">
+                        <label for="purifiedWaterLevel" class="block text-sm font-medium text-gray-700 mb-2">纯净水箱水位 (m)</label>
+                        <input type="number" id="purifiedWaterLevel" min="0" max="10" step="0.1" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="请输入水位高度">
                     </div>
                 </div>
             </div>
@@ -210,26 +210,17 @@
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
                 <h2 class="text-lg font-semibold text-gray-800 mb-4">加压泵组状态</h2>
                 <div class="space-y-4">
-                    <div class="flex justify-between items-center">
-                        <label class="text-gray-700 font-medium">研发楼加压泵</label>
-                        <label class="switch">
-                            <input type="checkbox" id="rdBuildingPump">
-                            <span class="slider"></span>
-                        </label>
+                    <div>
+                        <label for="rdBuildingPump" class="block text-sm font-medium text-gray-700 mb-2">研发楼加压泵压力 (MPa)</label>
+                        <input type="number" id="rdBuildingPump" min="0" max="10" step="0.1" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="请输入压力值">
                     </div>
-                    <div class="flex justify-between items-center">
-                        <label class="text-gray-700 font-medium">高区加压泵</label>
-                        <label class="switch">
-                            <input type="checkbox" id="highZonePump">
-                            <span class="slider"></span>
-                        </label>
+                    <div>
+                        <label for="highZonePump" class="block text-sm font-medium text-gray-700 mb-2">高区加压泵压力 (MPa)</label>
+                        <input type="number" id="highZonePump" min="0" max="10" step="0.1" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="请输入压力值">
                     </div>
-                    <div class="flex justify-between items-center">
-                        <label class="text-gray-700 font-medium">低区加压泵</label>
-                        <label class="switch">
-                            <input type="checkbox" id="lowZonePump">
-                            <span class="slider"></span>
-                        </label>
+                    <div>
+                        <label for="lowZonePump" class="block text-sm font-medium text-gray-700 mb-2">低区加压泵压力 (MPa)</label>
+                        <input type="number" id="lowZonePump" min="0" max="10" step="0.1" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="请输入压力值">
                     </div>
                 </div>
             </div>
