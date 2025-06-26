@@ -60,6 +60,22 @@
                 </div>
                 
                 <div class="space-y-4">
+                    <div class="border-l-4 border-blue-600 pl-4">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">🐞 前端问题修复 2025-06-25</h3>
+                    <p class="text-gray-600 mb-2">修复了多个前端显示与交互相关的 bug，提升了系统稳定性和用户体验：</p>
+                    <ul class="text-sm text-gray-500 space-y-1 ml-4">
+                        <li>• LeanCloud createdAt 字段冲突错误：移除手动设置，避免保留字段冲突</li>
+                        <li>• openImageModal 递归调用导致栈溢出：优化模态框创建与关闭逻辑，防止死循环</li>
+                        <li>• 日志列表显示“未知用户”问题：完善用户名获取逻辑，兼容历史数据</li>
+                        <li>• 头部用户信息布局错乱：调整 CSS，确保用户名与退出按钮同列显示</li>
+                        <li>• 长链接超出页面：新增多重换行策略，优化超长文本显示</li>
+                        <li>• 删除弃用 JS 文件：清理根目录下已被替代的旧 JS 文件</li>
+                        <li>• 历史日志用户名显示异常：兼容 authorName 字段，完善显示逻辑</li>
+                        <li>• 图片预览报错：修复 openImageModal 递归问题，增强模态框健壮性</li>
+                        <li>• mainPageApp 未定义：全局声明并赋值，保证 HTML 事件正常调用</li>
+                    </ul>
+                </div>
+
                     <div class="border-l-4 border-orange-500 pl-4">
                         <h3 class="text-lg font-semibold text-gray-800 mb-2">🔧 记录模板 2025-06-24</h3>
                         <p class="text-gray-600 mb-2">新增一些页面</p>
@@ -120,7 +136,16 @@
                         </ul>
                     </div>
 
-                    
+                    <div class="border-l-4 border-blue-400 pl-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">📦 离线模式与缓存优化 2025-06-25</h3>
+                        <p class="text-gray-600 mb-2">实现了全站离线录入与静态资源缓存，提升了系统可用性和访问速度：</p>
+                        <ul class="text-sm text-gray-500 space-y-1 ml-4">
+                            <li>• 首页、空调机房、高压配电房、净水器等页面均支持离线录入，断网时可正常填写，联网后自动同步</li>
+                            <li>• 离线数据自动补发到 LeanCloud 并推送企业微信群</li>
+                            <li>• 集成 Service Worker，页面及静态资源自动缓存，提升二次访问速度</li>
+                            <li>• 离线机制与主流浏览器和微信内置浏览器兼容</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 

@@ -1,4 +1,4 @@
-# 已修复的问题 (2024-12-19)
+# 已修复的问题 (2025-06-25)
 
 ## 1. LeanCloud createdAt 字段冲突错误 ✅ 已修复
 **问题描述：** 
@@ -65,5 +65,32 @@ at openImageModal
 ~~at openImageModal ((索引):460:24)~~
 
 **修复方案：** 已在之前的会话中修复了openImageModal函数的递归调用问题，增加了对现有模态框的检查和移除逻辑。
-    at openImageModal ((索引):460:24)
+
+## 9. openImageModal 递归调用栈溢出错误 ✅ 已修复
+**问题描述：**
+```
+Uncaught RangeError: Maximum call stack size exceeded 
+at openImageModal (index.html:484:13)
+```
+**原因分析：** index.html中的openImageModal函数调用了window.openImageModal，而window.openImageModal又指向了同一个函数，造成了无限递归调用。
+
+**修复方案：**
+1. 重写了index.html中的openImageModal函数，移除了递归调用
+2. 直接在函数内部实现图片模态框的创建逻辑
+3. 添加了重复模态框检查机制，避免重复创建
+4. 确保模态框的正确关闭和事件处理
+
+## 10. mainPageApp 未定义错误 ✅ 已修复
+**问题描述：**
+```
+index.html:1  Uncaught ReferenceError: mainPageApp is not defined 
+at HTMLButtonElement.onclick (index.html:1:1)
+```
+**原因分析：** HTML中的onclick事件引用了mainPageApp变量，但该变量没有在全局作用域中正确声明和赋值。
+
+**修复方案：**
+1. 在全局作用域中声明了window.mainPageApp变量
+2. 在应用初始化时将mainApp实例同时赋值给window.mainPageApp
+3. 确保HTML中的onclick事件能够正确访问到mainPageApp对象
+4. 保持了向后兼容性，支持现有的HTML onclick事件处理
 

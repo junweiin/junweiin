@@ -150,47 +150,93 @@ class MainPageApp extends BaseWorkLogApp {
     }
     
     /**
+     * 离线日志队列本地存储键
+     */
+    static OFFLINE_QUEUE_KEY = 'worklog_offline_queue';
+
+    /**
+     * 保存离线日志到本地
+     */
+    saveOfflineLog(logData) {
+        let queue = [];
+        try {
+            queue = JSON.parse(localStorage.getItem(MainPageApp.OFFLINE_QUEUE_KEY)) || [];
+        } catch (e) {}
+        queue.push(logData);
+        localStorage.setItem(MainPageApp.OFFLINE_QUEUE_KEY, JSON.stringify(queue));
+    }
+
+    /**
+     * 检查并同步离线日志
+     */
+    async syncOfflineLogs() {
+        let queue = [];
+        try {
+            queue = JSON.parse(localStorage.getItem(MainPageApp.OFFLINE_QUEUE_KEY)) || [];
+        } catch (e) {}
+        if (!queue.length) return;
+        const failed = [];
+        for (const log of queue) {
+            try {
+                await this.submitWorkLog({ content: log.content }, log.images || [], log.content);
+                // 推送到企业微信群
+                let userName = this.currentUser?.get('realName') || this.currentUser?.get('username') || '';
+                let msg = `【新工作日志-离线补发】\n用户：${userName}\n内容：${log.content}`;
+                this.sendToWeComGroup(msg);
+            } catch (e) {
+                failed.push(log); // 失败的保留
+            }
+        }
+        if (failed.length) {
+            localStorage.setItem(MainPageApp.OFFLINE_QUEUE_KEY, JSON.stringify(failed));
+        } else {
+            localStorage.removeItem(MainPageApp.OFFLINE_QUEUE_KEY);
+        }
+        if (queue.length > failed.length) {
+            WorkLogUtils.showMessage('离线日志已自动同步', 'success');
+            this.resetLogsList();
+            await this.loadLogs();
+        }
+    }
+
+    /**
      * 处理发布日志
      */
     async handlePost(e) {
         e.preventDefault();
-        
         const content = this.elements.postContent?.value?.trim();
         if (!content) {
             WorkLogUtils.showMessage('请输入日志内容', 'warning');
             return;
         }
-        
         const submitBtn = this.elements.postForm.querySelector('button[type="submit"]');
         const originalText = submitBtn?.textContent;
-        
         try {
             if (submitBtn) {
                 submitBtn.textContent = '发布中...';
                 submitBtn.disabled = true;
             }
-            
             // 上传图片
             const images = await this.uploadImages();
-            
             // 提交日志
             const formData = { content };
-            await this.submitWorkLog(formData, images, content);
-            
-            WorkLogUtils.showMessage('日志发布成功！', 'success');
-            
+            try {
+                await this.submitWorkLog(formData, images, content);
+                WorkLogUtils.showMessage('日志发布成功！', 'success');
+                // 推送到企业微信群
+                let userName = this.currentUser?.get('realName') || this.currentUser?.get('username') || '';
+                let msg = `【新工作日志】\n用户：${userName}\n内容：${content}`;
+                this.sendToWeComGroup(msg);
+            } catch (err) {
+                // 离线或写入失败，保存到本地
+                this.saveOfflineLog({ content, images });
+                WorkLogUtils.showMessage('网络异常，日志已离线保存，联网后将自动同步', 'warning');
+            }
             // 重置表单
             this.resetForm('postForm');
-            
             // 重新加载日志列表
             this.resetLogsList();
             await this.loadLogs();
-            
-            // === 新增：推送到企业微信群 ===
-            let userName = this.currentUser?.get('realName') || this.currentUser?.get('username') || '';
-            let msg = `【新工作日志】\n用户：${userName}\n内容：${content}`;
-            this.sendToWeComGroup(msg);
-            // ===
         } catch (error) {
             console.error('发布失败:', error);
             WorkLogUtils.showMessage('发布失败: ' + error.message, 'error');
@@ -358,7 +404,6 @@ class MainPageApp extends BaseWorkLogApp {
             <div class="flex justify-between items-start mb-3">
                 <div class="flex items-center space-x-2">
                     <span class="font-semibold text-gray-800">${realName}</span>
-                    <span class="text-gray-500 text-sm">@${username}</span>
                     <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">${pageTypeLabel}</span>
                 </div>
                 <div class="flex items-center space-x-2">
@@ -477,6 +522,14 @@ class MainPageApp extends BaseWorkLogApp {
 
 
     /**
+     * 初始化时自动同步离线日志
+     */
+    async init() {
+        await super.init?.();
+        this.syncOfflineLogs();
+    }
+
+    /**
      * 销毁应用
      */
     destroy() {
@@ -484,6 +537,26 @@ class MainPageApp extends BaseWorkLogApp {
         window.removeEventListener('scroll', this.handleScroll);
     }
 }
+
+// 统计当前用户发表日志次数
+async function updateMyPostCount() {
+    if (!window.WorkLogAuth || !WorkLogAuth.getCurrentUser) return;
+    const user = WorkLogAuth.getCurrentUser();
+    if (!user) return;
+    try {
+        const query = new AV.Query('WorkLog');
+        query.equalTo('user', user);
+        const count = await query.count();
+        const el = document.getElementById('myPostCount');
+        if (el) el.textContent = count;
+    } catch (e) {
+        const el = document.getElementById('myPostCount');
+        if (el) el.textContent = '--';
+    }
+}
+
+// 登录后统计
+window.addEventListener('userLoggedIn', updateMyPostCount);
 
 // 全局图片模态框函数（保持向后兼容）
 function openImageModal(imageUrl) {

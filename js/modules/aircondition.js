@@ -332,6 +332,47 @@ class AirConditionApp extends BaseWorkLogApp {
     }
 
     /**
+     * 离线日志相关
+     */
+    static OFFLINE_QUEUE_KEY = 'aircondition_offline_queue';
+
+    saveOfflineLog(logData) {
+        let queue = [];
+        try {
+            queue = JSON.parse(localStorage.getItem(AirConditionApp.OFFLINE_QUEUE_KEY)) || [];
+        } catch (e) {}
+        queue.push(logData);
+        localStorage.setItem(AirConditionApp.OFFLINE_QUEUE_KEY, JSON.stringify(queue));
+    }
+
+    async syncOfflineLogs() {
+        let queue = [];
+        try {
+            queue = JSON.parse(localStorage.getItem(AirConditionApp.OFFLINE_QUEUE_KEY)) || [];
+        } catch (e) {}
+        if (!queue.length) return;
+        const failed = [];
+        for (const log of queue) {
+            try {
+                await this.submitWorkLog(log.operationData, log.images || [], log.content);
+                let userName = this.currentUser?.get('realName') || this.currentUser?.get('username') || '';
+                let msg = `【空调机房操作记录-离线补发】\n用户：${userName}\n${log.content}`;
+                this.sendToWeComGroup(msg);
+            } catch (e) {
+                failed.push(log);
+            }
+        }
+        if (failed.length) {
+            localStorage.setItem(AirConditionApp.OFFLINE_QUEUE_KEY, JSON.stringify(failed));
+        } else {
+            localStorage.removeItem(AirConditionApp.OFFLINE_QUEUE_KEY);
+        }
+        if (queue.length > failed.length) {
+            WorkLogUtils.showMessage('离线操作记录已自动同步', 'success');
+        }
+    }
+
+    /**
      * 处理提交
      */
     async handleSubmit() {
@@ -364,16 +405,21 @@ class AirConditionApp extends BaseWorkLogApp {
             // 格式化内容
             const content = this.formatOperationDataToText(operationData);
             
-            // 提交工作日志
-            await this.submitWorkLog(operationData, images, content);
-            
-            WorkLogUtils.showMessage('操作记录提交成功！', 'success');
-            
-            // === 新增：推送到企业微信群 ===
-            let userName = this.currentUser.get('realName') || this.currentUser.get('username') || '';
-            let msg = `【空调机房操作记录】\n用户：${userName}\n${content}`;
-            this.sendToWeComGroup(msg);
-            // ===
+            try {
+                // 提交工作日志
+                await this.submitWorkLog(operationData, images, content);
+                WorkLogUtils.showMessage('操作记录提交成功！', 'success');
+                
+                // === 新增：推送到企业微信群 ===
+                let userName = this.currentUser.get('realName') || this.currentUser.get('username') || '';
+                let msg = `【空调机房操作记录】\n用户：${userName}\n${content}`;
+                this.sendToWeComGroup(msg);
+                // ===
+                
+            } catch (err) {
+                this.saveOfflineLog({ operationData, images, content });
+                WorkLogUtils.showMessage('网络异常，记录已离线保存，联网后将自动同步', 'warning');
+            }
             
             // 重置表单
             this.resetForm();
@@ -387,6 +433,14 @@ class AirConditionApp extends BaseWorkLogApp {
                 this.elements.submitBtn.disabled = false;
             }
         }
+    }
+
+    /**
+     * 初始化
+     */
+    async init() {
+        await super.init?.();
+        this.syncOfflineLogs();
     }
 
     /**

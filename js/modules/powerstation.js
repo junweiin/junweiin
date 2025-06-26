@@ -363,52 +363,86 @@ class PowerStationApp extends BaseWorkLogApp {
     }
 
     /**
+     * 离线日志队列的本地存储键
+     */
+    static OFFLINE_QUEUE_KEY = 'powerstation_offline_queue';
+
+    /**
+     * 保存离线日志
+     */
+    saveOfflineLog(logData) {
+        let queue = [];
+        try {
+            queue = JSON.parse(localStorage.getItem(PowerStationApp.OFFLINE_QUEUE_KEY)) || [];
+        } catch (e) {}
+        queue.push(logData);
+        localStorage.setItem(PowerStationApp.OFFLINE_QUEUE_KEY, JSON.stringify(queue));
+    }
+
+    /**
+     * 同步离线日志
+     */
+    async syncOfflineLogs() {
+        let queue = [];
+        try {
+            queue = JSON.parse(localStorage.getItem(PowerStationApp.OFFLINE_QUEUE_KEY)) || [];
+        } catch (e) {}
+        if (!queue.length) return;
+        const failed = [];
+        for (const log of queue) {
+            try {
+                await this.submitWorkLog(log.formData, log.photoUrls || [], log.content);
+                let userName = this.currentUser?.get('realName') || this.currentUser?.get('username') || '';
+                let msg = `【高压配电房操作记录-离线补发】\n用户：${userName}\n${log.content}`;
+                this.sendToWeComGroup(msg);
+            } catch (e) {
+                failed.push(log);
+            }
+        }
+        if (failed.length) {
+            localStorage.setItem(PowerStationApp.OFFLINE_QUEUE_KEY, JSON.stringify(failed));
+        } else {
+            localStorage.removeItem(PowerStationApp.OFFLINE_QUEUE_KEY);
+        }
+        if (queue.length > failed.length) {
+            WorkLogUtils.showMessage('离线操作记录已自动同步', 'success');
+        }
+    }
+
+    /**
      * 处理提交
      */
     async handleSubmit(e) {
         if (e) e.preventDefault();
-        
         if (!this.currentUser) {
             WorkLogUtils.showMessage('请先登录', 'warning');
             return;
         }
-        
-        // 收集表单数据
         const formData = this.collectFormData();
-        
-        // 验证必填字段
         const validation = WorkLogUtils.validateFormData(formData, ['operationRecord']);
         if (!validation.isValid) {
             WorkLogUtils.showMessage(validation.message, 'warning');
             return;
         }
-        
         const originalText = this.elements.submitBtn?.textContent;
-        
         try {
             if (this.elements.submitBtn) {
                 this.elements.submitBtn.textContent = '提交中...';
                 this.elements.submitBtn.disabled = true;
             }
-            
-            // 上传照片
             const photoUrls = await this.uploadPhotos();
-            
-            // 格式化内容
             const content = this.formatDataToContent(formData, photoUrls);
-            
-            // 提交工作日志
-            await this.submitWorkLog(formData, photoUrls, content);
-            
-            WorkLogUtils.showMessage('操作记录提交成功！', 'success');
-            // === 新增：推送到企业微信群 ===
-            let userName = this.currentUser.get('realName') || this.currentUser.get('username') || '';
-            let msg = `【变电站操作记录】\n用户：${userName}\n${content}`;
-            this.sendToWeComGroup(msg);
-            // ===
-            // 重置表单
+            try {
+                await this.submitWorkLog(formData, photoUrls, content);
+                WorkLogUtils.showMessage('操作记录提交成功！', 'success');
+                let userName = this.currentUser.get('realName') || this.currentUser.get('username') || '';
+                let msg = `【高压配电房操作记录】\n用户：${userName}\n${content}`;
+                this.sendToWeComGroup(msg);
+            } catch (err) {
+                this.saveOfflineLog({ formData, photoUrls, content });
+                WorkLogUtils.showMessage('网络异常，记录已离线保存，联网后将自动同步', 'warning');
+            }
             this.resetForm();
-            
         } catch (error) {
             console.error('提交失败:', error);
             WorkLogUtils.showMessage('提交失败: ' + error.message, 'error');

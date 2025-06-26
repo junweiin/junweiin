@@ -244,7 +244,7 @@
 
         <!-- 专业功能区域 -->
         <div id="specialFunctionsSection" class="hidden bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-            <h2 class="text-lg font-semibold text-gray-800 mb-4">专业功能</h2>
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">功能</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <a href="https://tcxbcgw45z.jiandaoyun.com/f/668249696ec9a7fc0a2eae1c" target="_blank" class="block bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white p-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-sm hover:shadow-md">
                     <div class="flex items-center space-x-3">
@@ -255,18 +255,20 @@
                         </div>
                     </div>
                 </a>
-                <!-- 可以在这里添加更多专业功能 -->
+                <!-- 统计 -->
                 <div class="bg-gray-100 p-4 rounded-xl border-2 border-dashed border-gray-300">
                     <div class="flex items-center space-x-3 text-gray-500">
-                        <div class="text-2xl">🔧</div>
+                        <div class="text-2xl">📊</div>
                         <div>
-                            <h3 class="font-semibold text-lg">更多功能</h3>
-                            <p class="text-sm">敬请期待...</p>
+                            <h3 class="font-semibold text-lg">统计模块</h3>
+                            <p class="text-sm"><span id="myPostCount">--</span> 次工作记录</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        
 
         <!-- 日志列表 -->
         <div id="logsList">
@@ -282,6 +284,10 @@
         <div id="noMoreContent" class="hidden text-center py-8 text-gray-500">
             没有更多工作了
         </div>
+
+       
+
+        
 
         <!-- 页脚区域 -->
         <footer class="mt-12 pt-8 border-t border-gray-200">
@@ -452,7 +458,6 @@
     <script src="js/auth.js"></script>
     <script src="js/base-app.js"></script>
     <script src="js/modules/main-page.js"></script>
-    
     <script>
         // 初始化主页应用
         let mainApp;
@@ -467,7 +472,7 @@
                 if (typeof AV !== 'undefined') {
                     try {
                         mainApp = new MainPageApp();
-                        window.mainPageApp = mainApp; // 让mainPageApp成为全局变量，供HTML onclick使用
+                        window.mainPageApp = mainApp; // 同时赋值给全局变量
                         mainApp.init();
                         console.log('主页应用初始化成功');
                     } catch (error) {
@@ -482,6 +487,17 @@
             
             checkAndInitApp();
         });
+
+        // 注册 Service Worker，实现静态资源缓存和离线支持
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('sw.js').then(function(registration) {
+                    console.log('Service Worker 注册成功:', registration.scope);
+                }).catch(function(error) {
+                    console.warn('Service Worker 注册失败:', error);
+                });
+            });
+        }
     </script>
 </body>
 </html>
