@@ -299,10 +299,8 @@ class MainPageApp extends BaseWorkLogApp {
             const query = new AV.Query(WorkLog);
             
             query.include('user');
-            // 改进排序逻辑：置顶日志优先，按置顶时间倒序，最后按创建时间倒序
-            query.addDescending('isPinned');
-            query.addDescending('pinnedAt');
-            query.addDescending('createdAt');
+            // 按创建时间倒序
+            query.descending('createdAt');
             query.limit(WORKLOG_CONFIG.APP.PAGE_SIZE);
             query.skip(this.currentPage * WORKLOG_CONFIG.APP.PAGE_SIZE);
             
@@ -334,21 +332,7 @@ class MainPageApp extends BaseWorkLogApp {
      */
     renderLogItem(log, returnElement = false) {
         const logElement = document.createElement('div');
-        const isPinned = log.get('isPinned') === true;
-        logElement.className = `bg-white rounded-lg shadow-md p-6 mb-4 log-item ${isPinned ? 'border-l-4 border-yellow-500 bg-yellow-50' : ''}`;
-        
-        // 添加置顶标签
-        if (isPinned) {
-            const pinLabel = document.createElement('span');
-            pinLabel.className = 'inline-block bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full ml-2';
-            pinLabel.textContent = '置顶';
-            
-            // 找到合适的位置插入标签
-            const logHeader = logElement.querySelector('.log-header');
-            if (logHeader) {
-                logHeader.appendChild(pinLabel);
-            }
-        }
+        logElement.className = 'bg-white rounded-lg shadow-md p-6 mb-4 log-item';
         logElement.dataset.logId = log.id;
         
         const user = log.get('user');
@@ -409,7 +393,7 @@ class MainPageApp extends BaseWorkLogApp {
             `;
         }
         
-        // 操作按钮（删除和置顶）
+        // 操作按钮（删除）
         let actionButtonsHtml = '';
         if (this.currentUser && user) {
             const isPinned = log.get('isPinned') === true;
@@ -427,16 +411,7 @@ class MainPageApp extends BaseWorkLogApp {
                 `;
             }
             
-            // 置顶按钮（仅管理员可见）
-            if (isAdmin) {
-                actionButtonsHtml += `
-                    <button onclick="if(!confirm('确定要${isPinned ? '取消置顶' : '置顶'}此日志吗？')) return false; 
-                                   mainPageApp.togglePinLog('${log.id}', ${isPinned}, this.closest('.log-item'))" 
-                            class="ml-2 ${isPinned ? 'text-yellow-500 hover:text-yellow-700' : 'text-gray-500 hover:text-gray-700'} text-sm">
-                        ${isPinned ? '取消置顶' : '置顶'}
-                    </button>
-                `;
-            }
+        
         }
         
         logElement.innerHTML = `
@@ -485,40 +460,7 @@ class MainPageApp extends BaseWorkLogApp {
         }
     }
 
-    /**
-     * 切换日志置顶状态
-     */
-    async togglePinLog(logId, isPinned, logElement) {
-        try {
-            const WorkLog = AV.Object.extend('WorkLog');
-            const log = AV.Object.createWithoutData('WorkLog', logId);
-            const newPinnedState = !isPinned;
-            log.set('isPinned', newPinnedState);
-            
-            // 使用自定义字段记录置顶时间，避免修改系统保留字段
-            log.set('pinnedAt', new Date());
-            
-            await log.save();
-            WorkLogUtils.showMessage(`日志已${isPinned ? '取消置顶' : '置顶'}`, 'success');
-            
-            // 刷新当前日志项
-            if (logElement) {
-                const query = new AV.Query(WorkLog);
-                query.include('user');
-                const updatedLog = await query.get(logId);
-                this.renderLogItem(updatedLog, logElement);
-            }
-            
-            // 强制重新加载日志列表以确保排序正确
-            this.resetLogsList();
-            this.currentPage = 0;
-            await this.loadLogs();
-            
-        } catch (error) {
-            console.error('置顶操作失败:', error);
-            WorkLogUtils.showMessage('操作失败: ' + error.message, 'error');
-        }
-    }
+
 
     /**
      * 设置无限滚动
@@ -598,47 +540,9 @@ class MainPageApp extends BaseWorkLogApp {
     /**
      * 初始化时自动同步离线日志
      */
-    /**
-     * 初始化下拉刷新
-     */
-    initPullToRefresh() {
-        if (!window.PullToRefresh) return;
-        
-        // 销毁已有的下拉刷新实例
-        if (this.ptr) {
-            this.ptr.destroy();
-        }
-        
-        this.ptr = PullToRefresh.init({
-            mainElement: 'body',
-            triggerElement: '#logsList',
-            onRefresh: async () => {
-                try {
-                    this.resetLogsList();
-                    await this.loadLogs();
-                } catch (error) {
-                    console.error('下拉刷新失败:', error);
-                } finally {
-                    if (this.ptr && typeof this.ptr.refresh === 'function') {
-                        this.ptr.refresh();
-                    }
-                }
-            },
-            iconArrow: '&nbsp;',
-            iconRefreshing: '<div class="w-8 h-8 border-4 border-gray-300 border-t-blue-500 rounded-full loading"></div>',
-            instructionsPullToRefresh: '下拉刷新',
-            instructionsReleaseToRefresh: '释放刷新',
-            instructionsRefreshing: '刷新中...',
-            distThreshold: 60,
-            distMax: 80,
-            distReload: 50,
-        });
-    }
-
     async init() {
         await super.init?.();
         this.syncOfflineLogs();
-        this.initPullToRefresh();
     }
 
     /**
@@ -647,9 +551,6 @@ class MainPageApp extends BaseWorkLogApp {
     destroy() {
         super.destroy();
         window.removeEventListener('scroll', this.handleScroll);
-        if (this.ptr) {
-            this.ptr.destroy();
-        }
     }
 }
 
