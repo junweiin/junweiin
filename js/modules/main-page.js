@@ -495,8 +495,8 @@ class MainPageApp extends BaseWorkLogApp {
             const newPinnedState = !isPinned;
             log.set('isPinned', newPinnedState);
             
-            // 使用updatedAt字段作为置顶时间
-            log.set('updatedAt', new Date());
+            // 使用自定义字段记录置顶时间，避免修改系统保留字段
+            log.set('pinnedAt', new Date());
             
             await log.save();
             WorkLogUtils.showMessage(`日志已${isPinned ? '取消置顶' : '置顶'}`, 'success');
