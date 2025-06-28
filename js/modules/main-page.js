@@ -299,9 +299,10 @@ class MainPageApp extends BaseWorkLogApp {
             const query = new AV.Query(WorkLog);
             
             query.include('user');
-            // 置顶日志优先，然后按时间倒序
+            // 改进排序逻辑：置顶日志优先，按置顶时间倒序，最后按创建时间倒序
             query.addDescending('isPinned');
-            query.descending('createdAt');
+            query.addDescending('pinnedAt');
+            query.addDescending('createdAt');
             query.limit(WORKLOG_CONFIG.APP.PAGE_SIZE);
             query.skip(this.currentPage * WORKLOG_CONFIG.APP.PAGE_SIZE);
             
@@ -331,10 +332,23 @@ class MainPageApp extends BaseWorkLogApp {
     /**
      * 渲染日志项
      */
-    renderLogItem(log) {
+    renderLogItem(log, returnElement = false) {
         const logElement = document.createElement('div');
         const isPinned = log.get('isPinned') === true;
-        logElement.className = `bg-white rounded-lg shadow-md p-6 mb-4 log-item ${isPinned ? 'border-l-4 border-yellow-500' : ''}`;
+        logElement.className = `bg-white rounded-lg shadow-md p-6 mb-4 log-item ${isPinned ? 'border-l-4 border-yellow-500 bg-yellow-50' : ''}`;
+        
+        // 添加置顶标签
+        if (isPinned) {
+            const pinLabel = document.createElement('span');
+            pinLabel.className = 'inline-block bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full ml-2';
+            pinLabel.textContent = '置顶';
+            
+            // 找到合适的位置插入标签
+            const logHeader = logElement.querySelector('.log-header');
+            if (logHeader) {
+                logHeader.appendChild(pinLabel);
+            }
+        }
         logElement.dataset.logId = log.id;
         
         const user = log.get('user');
@@ -478,9 +492,13 @@ class MainPageApp extends BaseWorkLogApp {
         try {
             const WorkLog = AV.Object.extend('WorkLog');
             const log = AV.Object.createWithoutData('WorkLog', logId);
-            log.set('isPinned', !isPinned);
-            await log.save();
+            const newPinnedState = !isPinned;
+            log.set('isPinned', newPinnedState);
             
+            // 使用updatedAt字段作为置顶时间
+            log.set('updatedAt', new Date());
+            
+            await log.save();
             WorkLogUtils.showMessage(`日志已${isPinned ? '取消置顶' : '置顶'}`, 'success');
             
             // 刷新当前日志项
@@ -490,6 +508,11 @@ class MainPageApp extends BaseWorkLogApp {
                 const updatedLog = await query.get(logId);
                 this.renderLogItem(updatedLog, logElement);
             }
+            
+            // 强制重新加载日志列表以确保排序正确
+            this.resetLogsList();
+            this.currentPage = 0;
+            await this.loadLogs();
             
         } catch (error) {
             console.error('置顶操作失败:', error);
