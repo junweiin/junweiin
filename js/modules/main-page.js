@@ -554,7 +554,7 @@ class MainPageApp extends BaseWorkLogApp {
     }
 }
 
-// 统计当前用户发表日志次数
+// 统计当前用户发表日志次数（总、今日、本周、本月、本年）
 async function updateMyPostCount() {
     if (!window.WorkLogAuth || !WorkLogAuth.getCurrentUser) return;
     const user = WorkLogAuth.getCurrentUser();
@@ -562,12 +562,72 @@ async function updateMyPostCount() {
     try {
         const query = new AV.Query('WorkLog');
         query.equalTo('user', user);
-        const count = await query.count();
-        const el = document.getElementById('myPostCount');
-        if (el) el.textContent = count;
+        // 总数
+        const total = await query.count();
+        var el = document.getElementById('myPostCount');
+        if (el) el.textContent = total;
+
+        // 今日
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+        const todayQuery = new AV.Query('WorkLog');
+        todayQuery.equalTo('user', user);
+        todayQuery.greaterThanOrEqualTo('createdAt', today);
+        todayQuery.lessThan('createdAt', tomorrow);
+        var elToday = document.getElementById('todayPostCount');
+        if (elToday) elToday.textContent = await todayQuery.count();
+
+        // 本周（周一为第一天）
+        const weekStart = new Date();
+        weekStart.setHours(0,0,0,0);
+        weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 7);
+        const weekQuery = new AV.Query('WorkLog');
+        weekQuery.equalTo('user', user);
+        weekQuery.greaterThanOrEqualTo('createdAt', weekStart);
+        weekQuery.lessThan('createdAt', weekEnd);
+        var elWeek = document.getElementById('weekPostCount');
+        if (elWeek) elWeek.textContent = await weekQuery.count();
+
+        // 本月
+        const monthStart = new Date();
+        monthStart.setHours(0,0,0,0);
+        monthStart.setDate(1);
+        const monthEnd = new Date(monthStart);
+        monthEnd.setMonth(monthStart.getMonth() + 1);
+        const monthQuery = new AV.Query('WorkLog');
+        monthQuery.equalTo('user', user);
+        monthQuery.greaterThanOrEqualTo('createdAt', monthStart);
+        monthQuery.lessThan('createdAt', monthEnd);
+        var elMonth = document.getElementById('monthPostCount');
+        if (elMonth) elMonth.textContent = await monthQuery.count();
+
+        // 本年
+        const yearStart = new Date();
+        yearStart.setHours(0,0,0,0);
+        yearStart.setMonth(0, 1);
+        const yearEnd = new Date(yearStart);
+        yearEnd.setFullYear(yearStart.getFullYear() + 1);
+        const yearQuery = new AV.Query('WorkLog');
+        yearQuery.equalTo('user', user);
+        yearQuery.greaterThanOrEqualTo('createdAt', yearStart);
+        yearQuery.lessThan('createdAt', yearEnd);
+        var elYear = document.getElementById('yearPostCount');
+        if (elYear) elYear.textContent = await yearQuery.count();
     } catch (e) {
-        const el = document.getElementById('myPostCount');
+        var el = document.getElementById('myPostCount');
         if (el) el.textContent = '--';
+        var elToday = document.getElementById('todayPostCount');
+        if (elToday) elToday.textContent = '--';
+        var elWeek = document.getElementById('weekPostCount');
+        if (elWeek) elWeek.textContent = '--';
+        var elMonth = document.getElementById('monthPostCount');
+        if (elMonth) elMonth.textContent = '--';
+        var elYear = document.getElementById('yearPostCount');
+        if (elYear) elYear.textContent = '--';
     }
 }
 

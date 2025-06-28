@@ -103,6 +103,33 @@
             to { opacity: 0; transform: translateX(-100%); }
         }
         
+        /* 统计模块样式 */
+        .stats-item {
+            transition: all 0.3s ease;
+        }
+        .stats-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .stats-count {
+            position: relative;
+        }
+        .stats-count.loading::after {
+            content: "";
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 2px;
+            background-color: #3b82f6;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { width: 20px; opacity: 1; }
+            50% { width: 30px; opacity: 0.5; }
+        }
+        
         /* 微信浏览器中的按钮样式修复 */
         .btn-fix {
             -webkit-appearance: none;
@@ -257,12 +284,34 @@
                     </div>
                 </a>
                 <!-- 统计 -->
-                <div class="bg-gray-100 p-4 rounded-xl border-2 border-dashed border-gray-300">
-                    <div class="flex items-center space-x-3 text-gray-500">
-                        <div class="text-2xl">📊</div>
-                        <div>
-                            <h3 class="font-semibold text-lg">统计模块</h3>
-                            <p class="text-sm"><span id="myPostCount">--</span> 次工作记录</p>
+                <div class="bg-white p-4 rounded-xl shadow-sm">
+                    <div class="flex flex-col">
+                        <div class="flex items-center space-x-3 mb-3">
+                            <div class="text-blue-500 text-2xl">📊</div>
+                            <h3 class="font-semibold text-lg text-gray-800">工作统计</h3>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-4">
+                            
+                            <div class="flex flex-col items-center p-2 border-l border-gray-100">
+                                <div class="text-gray-500 text-sm mb-1">今日</div>
+                                <div id="todayPostCount" class="text-xl font-bold text-green-600">--</div>
+                            </div>
+                            <div class="flex flex-col items-center p-2 border-l border-gray-100">
+                                <div class="text-gray-500 text-sm mb-1">本周</div>
+                                <div id="weekPostCount" class="text-xl font-bold text-purple-600">--</div>
+                            </div>
+                            <div class="flex flex-col items-center p-2 border-l border-gray-100">
+                                <div class="text-gray-500 text-sm mb-1">本月</div>
+                                <div id="monthPostCount" class="text-xl font-bold text-orange-500">--</div>
+                            </div>
+                            <div class="flex flex-col items-center p-2 border-l border-gray-100">
+                                <div class="text-gray-500 text-sm mb-1">本年</div>
+                                <div id="yearPostCount" class="text-xl font-bold text-red-500">--</div>
+                            </div>
+                            <div class="flex flex-col items-center p-2">
+                                <div class="text-gray-500 text-sm mb-1">总工作</div>
+                                <div id="myPostCount" class="text-xl font-bold text-blue-600">--</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -416,7 +465,18 @@
                         
                         // 页面加载时检查登录状态并更新统计
                         if (WorkLogAuth.getCurrentUser()) {
-                            updateMyPostCount();
+                            // 添加加载状态
+                            document.querySelectorAll('#myPostCount, #todayPostCount, #weekPostCount, #monthPostCount, #yearPostCount').forEach(el => {
+                                el.classList.add('loading');
+                            });
+            
+                            // 更新统计
+                            updateMyPostCount().then(() => {
+                                // 数据加载完成后移除加载状态
+                                document.querySelectorAll('#myPostCount, #todayPostCount, #weekPostCount, #monthPostCount, #yearPostCount').forEach(el => {
+                                    el.classList.remove('loading');
+                                });
+                            });
                         }
                     } catch (error) {
                         console.error('主页应用初始化失败:', error);
