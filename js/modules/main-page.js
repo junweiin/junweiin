@@ -598,9 +598,47 @@ class MainPageApp extends BaseWorkLogApp {
     /**
      * 初始化时自动同步离线日志
      */
+    /**
+     * 初始化下拉刷新
+     */
+    initPullToRefresh() {
+        if (!window.PullToRefresh) return;
+        
+        // 销毁已有的下拉刷新实例
+        if (this.ptr) {
+            this.ptr.destroy();
+        }
+        
+        this.ptr = PullToRefresh.init({
+            mainElement: 'body',
+            triggerElement: '#logsList',
+            onRefresh: async () => {
+                try {
+                    this.resetLogsList();
+                    await this.loadLogs();
+                } catch (error) {
+                    console.error('下拉刷新失败:', error);
+                } finally {
+                    if (this.ptr && typeof this.ptr.refresh === 'function') {
+                        this.ptr.refresh();
+                    }
+                }
+            },
+            iconArrow: '&nbsp;',
+            iconRefreshing: '<div class="w-8 h-8 border-4 border-gray-300 border-t-blue-500 rounded-full loading"></div>',
+            instructionsPullToRefresh: '下拉刷新',
+            instructionsReleaseToRefresh: '释放刷新',
+            instructionsRefreshing: '刷新中...',
+            distThreshold: 60,
+            distMax: 80,
+            distReload: 50,
+        });
+    }
+
     async init() {
         await super.init?.();
         this.syncOfflineLogs();
+        this.initPullToRefresh();
     }
 
     /**
@@ -609,6 +647,9 @@ class MainPageApp extends BaseWorkLogApp {
     destroy() {
         super.destroy();
         window.removeEventListener('scroll', this.handleScroll);
+        if (this.ptr) {
+            this.ptr.destroy();
+        }
     }
 }
 
