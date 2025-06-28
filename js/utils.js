@@ -89,36 +89,51 @@ const WorkLogUtils = {
     },
 
     /**
-     * 批量上传图片到LeanCloud
+     * 批量上传图片到自建API
      * @param {FileList} files - 文件列表
      * @param {string} prefix - 文件名前缀
      * @returns {Promise<Array>} 上传后的图片URL数组
      */
     async uploadImages(files, prefix = 'worklog') {
         const images = [];
-        
+        const apiUrl = 'https://www.junwei.bid:89/web/11/index.php';
+        const token = '8e7057ee0ba0be565301980fb3e52763';
         for (let i = 0; i < files.length; i++) {
             try {
                 // 压缩图片
                 const compressedBlob = await this.compressImage(files[i]);
-                
                 // 创建新的文件名
                 const originalName = files[i].name;
                 const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.')) || originalName;
                 const compressedFileName = `${prefix}_${nameWithoutExt}_${Date.now()}_${i}.jpg`;
-                
-                // 上传压缩后的图片
-                const file = new AV.File(compressedFileName, compressedBlob);
-                const savedFile = await file.save();
-                images.push(savedFile.url());
-                
+                // 构造FormData
+                const formData = new FormData();
+                formData.append('token', token);
+                formData.append('image', new File([compressedBlob], compressedFileName, { type: 'image/jpeg' }));
+                // 可选：formData.append('format', 'url_only');
+                // 上传到自建API
+                const resp = await fetch(apiUrl, {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!resp.ok) throw new Error('上传失败');
+                const result = await resp.json();
+                // 兼容不同返回格式
+                if (result.url) {
+                    images.push(result.url);
+                } else if (result.data && result.data.url) {
+                    images.push(result.data.url);
+                } else if (typeof result === 'string') {
+                    images.push(result);
+                } else {
+                    throw new Error('API响应格式异常');
+                }
                 console.log(`图片 ${originalName} 压缩并上传成功`);
             } catch (error) {
                 console.error('图片压缩或上传失败:', error);
                 this.showMessage(`图片 ${files[i].name} 处理失败`, 'error');
             }
         }
-        
         return images;
     },
 
