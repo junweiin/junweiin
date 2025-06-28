@@ -270,6 +270,37 @@
             </form>
         </div>
 
+        <!-- 统计模块 -->
+        <div id="statisticsSection" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">工作统计</h2>
+            <div class="bg-white p-4 rounded-xl shadow-sm">
+                <div class="flex flex-col">
+                    <div class="grid grid-cols-3 md:grid-cols-5 gap-2 md:gap-4">
+                        <div class="flex flex-col items-center p-2 border-l border-gray-100">
+                            <div class="text-gray-500 text-sm mb-1">今日</div>
+                            <div id="todayPostCount" class="text-xl font-bold text-green-600">--</div>
+                        </div>
+                        <div class="flex flex-col items-center p-2 border-l border-gray-100">
+                            <div class="text-gray-500 text-sm mb-1">本周</div>
+                            <div id="weekPostCount" class="text-xl font-bold text-purple-600">--</div>
+                        </div>
+                        <div class="flex flex-col items-center p-2 border-l border-gray-100">
+                            <div class="text-gray-500 text-sm mb-1">本月</div>
+                            <div id="monthPostCount" class="text-xl font-bold text-orange-500">--</div>
+                        </div>
+                        <div class="flex flex-col items-center p-2 border-l border-gray-100">
+                            <div class="text-gray-500 text-sm mb-1">本年</div>
+                            <div id="yearPostCount" class="text-xl font-bold text-red-500">--</div>
+                        </div>
+                        <div class="flex flex-col items-center p-2">
+                            <div class="text-gray-500 text-sm mb-1">总工作</div>
+                            <div id="myPostCount" class="text-xl font-bold text-blue-600">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- 专业功能区域 -->
         <div id="specialFunctionsSection" class="hidden bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
             <h2 class="text-lg font-semibold text-gray-800 mb-4">功能</h2>
@@ -283,38 +314,6 @@
                         </div>
                     </div>
                 </a>
-                <!-- 统计 -->
-                <div class="bg-white p-4 rounded-xl shadow-sm">
-                    <div class="flex flex-col">
-                        <div class="flex items-center space-x-3 mb-3">
-                            <div class="text-blue-500 text-2xl">📊</div>
-                            <h3 class="font-semibold text-lg text-gray-800">工作统计</h3>
-                        </div>
-                        <div class="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-4">
-                            
-                            <div class="flex flex-col items-center p-2 border-l border-gray-100">
-                                <div class="text-gray-500 text-sm mb-1">今日</div>
-                                <div id="todayPostCount" class="text-xl font-bold text-green-600">--</div>
-                            </div>
-                            <div class="flex flex-col items-center p-2 border-l border-gray-100">
-                                <div class="text-gray-500 text-sm mb-1">本周</div>
-                                <div id="weekPostCount" class="text-xl font-bold text-purple-600">--</div>
-                            </div>
-                            <div class="flex flex-col items-center p-2 border-l border-gray-100">
-                                <div class="text-gray-500 text-sm mb-1">本月</div>
-                                <div id="monthPostCount" class="text-xl font-bold text-orange-500">--</div>
-                            </div>
-                            <div class="flex flex-col items-center p-2 border-l border-gray-100">
-                                <div class="text-gray-500 text-sm mb-1">本年</div>
-                                <div id="yearPostCount" class="text-xl font-bold text-red-500">--</div>
-                            </div>
-                            <div class="flex flex-col items-center p-2">
-                                <div class="text-gray-500 text-sm mb-1">总工作</div>
-                                <div id="myPostCount" class="text-xl font-bold text-blue-600">--</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
