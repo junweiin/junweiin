@@ -175,9 +175,10 @@
             </div>
         </div>
         
-        <!-- 操作记录表单 -->
-        <div id="operationSection" class="hidden">
-            <!-- 环境参数 -->
+                    <!-- 操作记录表单 -->
+                    <div id="operationSection" class="hidden">
+                        <form id="operationForm">
+                            <!-- 环境参数 -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
                 <h2 class="text-lg font-semibold text-gray-800 mb-4">环境参数</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -281,10 +282,11 @@
 
             <!-- 提交按钮 -->
             <div class="flex justify-center">
-                <button id="submitBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg transition-colors font-medium btn-fix text-lg">
+                <button id="submitBtn" type="button" class="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg transition-colors font-medium btn-fix text-lg">
                     提交操作记录
                 </button>
             </div>
+                </form>
         </div>
     </main>
 

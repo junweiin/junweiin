@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- 微信浏览器兼容性设置 -->
+    <meta name="x5-orientation" content="portrait">
+    <meta name="x5-fullscreen" content="true">
+    <meta name="x5-page-mode" content="app">
+    <title>工作日志</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <!-- Tailwind CSS CDN - 开发环境使用 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- LeanCloud SDK - 使用更稳定的 CDN 源 -->
+    <script src="https://unpkg.com/leancloud-storage@4.15.2/dist/av-min.js"></script>
+    <!-- 备用 CDN 源 -->
+    <script>
+        // 检测 LeanCloud SDK 是否加载成功，如果失败则使用备用源
+        window.addEventListener('load', function() {
+            if (typeof AV === 'undefined') {
+                console.log('主 CDN 加载失败，尝试备用源...');
+                var script = document.createElement('script');
+                script.src = 'https://cdn.bootcdn.net/ajax/libs/leancloud-storage/4.15.2/av-min.js';
+                script.onerror = function() {
+                    console.error('所有 CDN 源都加载失败，请检查网络连接');
+                    alert('网络连接异常，请检查网络后刷新页面');
+                };
+                document.head.appendChild(script);
+            }
+        });
+    </script>
+    <style>
+        /* 微信浏览器兼容性修复 */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+        
+        body {
+            -webkit-overflow-scrolling: touch;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        
+        input, textarea, button {
+            -webkit-appearance: none;
+            appearance: none;
+            border-radius: 0;
+        }
+        
+        button {
+            outline: none;
+            border: none;
+        }
+        
+        /* 修复微信中的滚动问题 */
+        .overflow-y-auto {
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .modal-overlay {
+            backdrop-filter: blur(4px);
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .loading {
+            border-top-color: #3498db;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .delete-log-btn {
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        
+        /* 微信中触摸设备的删除按钮显示优化 */
+        @media (hover: none) and (pointer: coarse) {
+            .delete-log-btn {
+                opacity: 0.6;
+            }
+        }
+        
+        .bg-white:hover .delete-log-btn {
+            opacity: 1;
+        }
+        .delete-log-btn:hover {
+            transform: scale(1.1);
+        }
+        @keyframes slideOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(-100%); }
+        }
+        
+        /* 统计模块样式 */
+        .stats-item {
+            transition: all 0.3s ease;
+        }
+        .stats-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .stats-count {
+            position: relative;
+        }
+        .stats-count.loading::after {
+            content: "";
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 2px;
+            background-color: #3b82f6;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { width: 20px; opacity: 1; }
+            50% { width: 30px; opacity: 0.5; }
+        }
+        
+        /* 微信浏览器中的按钮样式修复 */
+        .btn-fix {
+            -webkit-appearance: none;
+            appearance: none;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+        }
+        
+        /* 长链接和长文本换行处理 */
+        .break-words {
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        .overflow-wrap-anywhere {
+            overflow-wrap: anywhere;
+        }
+        
+        /* 确保链接在所有浏览器中都能正确换行 */
+        .log-content {
+            word-break: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+            -webkit-hyphens: auto;
+            -ms-hyphens: auto;
+        }
+        
+        /* 处理超长URL */
+        .log-content a {
+            word-break: break-all;
+            overflow-wrap: break-word;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 顶部导航栏 -->
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <h1 class="text-xl font-semibold text-gray-800">工作日志</h1>
+                <div id="userInfo" class="hidden flex items-center space-x-2 sm:space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <span id="realName" class="text-gray-500 text-xs sm:text-sm"></span>
+                    </div>
+                    <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm transition-colors btn-fix">
+                        <span class="hidden sm:inline">退出登录</span>
+                        <span class="sm:hidden">退出</span>
+                    </button>
+                </div>
+                <button id="loginBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm transition-colors btn-fix">
+                    登录
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区域 -->
+    <main class="max-w-4xl mx-auto px-4 py-6">
+        <!-- 欢迎页面 -->
+        <div id="welcomeSection" class="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg shadow-sm border border-blue-200 p-8 mb-6 text-center">
+            <div class="mb-6">
+                <h1 class="text-3xl font-bold text-gray-800 mb-4">欢迎使用工作日志系统</h1>
+                <div class="text-xl text-blue-600 font-semibold mb-2">
+                    相润金鹏酒店工程部
+                </div>
+                <p class="text-gray-600 text-lg mb-6">
+                    记录每一天的工作成果，见证团队的成长与进步
+                </p>
+            </div>
+        </div>
+        
+       
+
+       
+
+        
+
+        <!-- 页脚区域 -->
+        <footer class="mt-12 pt-8 border-t border-gray-200">
+            <div class="text-center space-y-3">
+                <a href="changelog.html" class="inline-flex items-center space-x-2 text-gray-500 hover:text-blue-500 transition-colors text-sm">
+                    <span>📋</span>
+                    <span>系统更新日志</span>
+                </a>
+                <div class="text-xs text-gray-400 space-y-1">
+                    <p>数据存储于 LeanCloud | 页面构建于 Github.io</p>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <!-- 登录弹窗 -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 modal-overlay flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto fade-in">
+            <div class="sticky top-0 bg-white p-4 border-b border-gray-200 rounded-t-lg">
+                <div class="flex justify-between items-center">
+                    <h2 id="modalTitle" class="text-xl font-semibold text-gray-800">登录</h2>
+                    <button id="closeModal" class="text-gray-400 hover:text-gray-600 text-2xl btn-fix">&times;</button>
+                </div>
+            </div>
+            <div class="p-4">
+                <!-- 登录表单 -->
+                <form id="loginForm" class="space-y-4">
+                    <div>
+                        <label for="loginUsername" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                        <input 
+                            type="text" 
+                            id="loginUsername" 
+                            autocomplete="username"
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                            required
+                        >
+                    </div>
+                    <div>
+                        <label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                        <input 
+                            type="password" 
+                            id="loginPassword" 
+                            autocomplete="current-password"
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                            required
+                        >
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                        <button 
+                            type="submit" 
+                            class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg transition-colors text-sm font-medium btn-fix"
+                        >
+                            登录
+                        </button>
+                    </div>
+                    <div class="text-center text-gray-500 text-xs mt-2">
+                        如需注册账号，请联系管理员！
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    
+    </div>
+
+    <!-- 下拉刷新库 -->
+    <script src="https://unpkg.com/pulltorefreshjs@0.1.22/dist/index.umd.js"></script>
+    <!-- 引入模块化JS文件 -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/base-app.js"></script>
+    <script src="js/modules/main-page.js"></script>
+    <script>
+        // 初始化主页应用
+        let mainApp;
+        
+        // 为了向后兼容，也声明mainPageApp
+        window.mainPageApp = null;
+        
+        // 等待DOM和LeanCloud SDK加载完成
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查LeanCloud SDK是否加载
+            function checkAndInitApp() {
+                if (typeof AV !== 'undefined') {
+                    try {
+                        mainApp = new MainPageApp();
+                        window.mainPageApp = mainApp; // 同时赋值给全局变量
+                        mainApp.init();
+                        console.log('主页应用初始化成功');
+                        
+                        // 页面加载时检查登录状态并更新统计
+                        if (WorkLogAuth.getCurrentUser()) {
+                            // 添加加载状态
+                            document.querySelectorAll('#myPostCount, #todayPostCount, #weekPostCount, #monthPostCount, #yearPostCount').forEach(el => {
+                                el.classList.add('loading');
+                            });
+            
+                            // 更新统计
+                            updateMyPostCount().then(() => {
+                                // 数据加载完成后移除加载状态
+                                document.querySelectorAll('#myPostCount, #todayPostCount, #weekPostCount, #monthPostCount, #yearPostCount').forEach(el => {
+                                    el.classList.remove('loading');
+                                });
+                            });
+                        }
+                    } catch (error) {
+                        console.error('主页应用初始化失败:', error);
+                        WorkLogUtils.showMessage('应用初始化失败: ' + error.message, 'error');
+                    }
+                } else {
+                    // 如果SDK还没加载，等待一段时间后重试
+                    setTimeout(checkAndInitApp, 100);
+                }
+            }
+            
+            checkAndInitApp();
+        });
+
+        // 注册 Service Worker，实现静态资源缓存和离线支持
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('sw.js').then(function(registration) {
+                    console.log('Service Worker 注册成功:', registration.scope);
+                }).catch(function(error) {
+                    console.warn('Service Worker 注册失败:', error);
+                });
+            });
+        }
+    </script>
+</body>
+</html>

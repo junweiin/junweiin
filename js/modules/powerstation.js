@@ -253,23 +253,37 @@ class PowerStationApp extends BaseWorkLogApp {
         const formData = {};
         
         // 环境参数
-        formData.temperature = document.querySelector('input[name="temperature"]')?.value || '';
-        formData.humidity = document.querySelector('input[name="humidity"]')?.value || '';
-        formData.weather = document.querySelector('select[name="weather"]')?.value || '';
+        const indoorTempInput = document.getElementById('indoorTemp');
+        const indoorHumidityInput = document.getElementById('indoorHumidity');
         
-        // 变压器温度
-        formData.transformerTempA = document.querySelector('input[name="transformerTempA"]')?.value || '';
-        formData.transformerTempB = document.querySelector('input[name="transformerTempB"]')?.value || '';
-        formData.transformerTempC = document.querySelector('input[name="transformerTempC"]')?.value || '';
+        formData.temperature = indoorTempInput?.value || '';
+        formData.humidity = indoorHumidityInput?.value || '';
+        
+        // 变压器2000KV温度
+        const transformer2000A = document.getElementById('transformer2000A');
+        const transformer2000B = document.getElementById('transformer2000B');
+        const transformer2000C = document.getElementById('transformer2000C');
+        
+        // 变压器1250KV温度
+        const transformer1250A = document.getElementById('transformer1250A');
+        const transformer1250B = document.getElementById('transformer1250B');
+        const transformer1250C = document.getElementById('transformer1250C');
+        
+        formData.transformer2000A = transformer2000A?.value || '';
+        formData.transformer2000B = transformer2000B?.value || '';
+        formData.transformer2000C = transformer2000C?.value || '';
+        formData.transformer1250A = transformer1250A?.value || '';
+        formData.transformer1250B = transformer1250B?.value || '';
+        formData.transformer1250C = transformer1250C?.value || '';
         
         // 设备状态
-        formData.transformerStatus = document.querySelector('input[name="transformerStatus"]:checked')?.value || '';
-        formData.fireSystemStatus = document.querySelector('input[name="fireSystemStatus"]:checked')?.value || '';
+        const transStatusRadio = document.querySelector('input[name="transformerStatus"]:checked');
+        const fireStatusRadio = document.querySelector('input[name="fireStatus"]:checked');
         
-        // 操作记录
-        formData.operationRecord = document.querySelector('textarea[name="operationRecord"]')?.value || '';
-        formData.remarks = document.querySelector('textarea[name="remarks"]')?.value || '';
+        formData.transformerStatus = transStatusRadio?.value || '';
+        formData.fireSystemStatus = fireStatusRadio?.value || '';
         
+        console.log('收集的表单数据:', formData);
         return formData;
     }
 
@@ -302,65 +316,56 @@ class PowerStationApp extends BaseWorkLogApp {
      * 格式化数据为内容文本
      */
     formatDataToContent(data, photoUrls = []) {
-        let content = '=== 变电站操作记录 ===\n\n';
+        let content = `高压配电房操作记录\n\n`;
+        content += `记录时间: ${new Date().toLocaleString()}\n\n`;
         
         // 环境参数
-        content += '【环境参数】\n';
-        if (data.temperature) content += `温度: ${data.temperature}°C\n`;
-        if (data.humidity) content += `湿度: ${data.humidity}%\n`;
-        if (data.weather) content += `天气: ${data.weather}\n`;
-        content += '\n';
+        content += `【环境参数】\n`;
+        content += `温度: ${data.temperature || '未填写'}°C\n`;
+        content += `湿度: ${data.humidity || '未填写'}%\n\n`;
         
-        // 变压器温度
-        content += '【变压器温度】\n';
-        if (data.transformerTempA) content += `A相温度: ${data.transformerTempA}°C\n`;
-        if (data.transformerTempB) content += `B相温度: ${data.transformerTempB}°C\n`;
-        if (data.transformerTempC) content += `C相温度: ${data.transformerTempC}°C\n`;
-        content += '\n';
+        // 变压器2000KV温度
+        content += `【变压器2000KV温度】\n`;
+        content += `A相: ${data.transformer2000A || '未填写'}°C\n`;
+        content += `B相: ${data.transformer2000B || '未填写'}°C\n`;
+        content += `C相: ${data.transformer2000C || '未填写'}°C\n\n`;
+        
+        // 变压器1250KV温度
+        content += `【变压器1250KV温度】\n`;
+        content += `A相: ${data.transformer1250A || '未填写'}°C\n`;
+        content += `B相: ${data.transformer1250B || '未填写'}°C\n`;
+        content += `C相: ${data.transformer1250C || '未填写'}°C\n\n`;
         
         // 设备状态
-        content += '【设备状态】\n';
-        if (data.transformerStatus) content += `变压器运行状态: ${data.transformerStatus}\n`;
-        if (data.fireSystemStatus) content += `消防设施状态: ${data.fireSystemStatus}\n`;
-        content += '\n';
-        
-        // 操作记录
-        if (data.operationRecord) {
-            content += '【操作记录】\n';
-            content += `${data.operationRecord}\n\n`;
-        }
-        
-        // 备注
-        if (data.remarks) {
-            content += '【备注】\n';
-            content += `${data.remarks}\n\n`;
-        }
+        content += `【设备状态】\n`;
+        content += `变压器: ${data.transformerStatus || '未填写'}\n`;
+        content += `消防设施: ${data.fireSystemStatus || '未填写'}\n\n`;
         
         // 照片信息
         if (photoUrls.length > 0) {
-            content += '【现场照片】\n';
-            content += `共 ${photoUrls.length} 张照片\n`;
+            content += `【现场照片】\n共 ${photoUrls.length} 张\n`;
         }
         
+        console.log('生成的内容:', content);
         return content;
     }
 
     /**
      * 推送内容到企业微信群机器人（通过后端PHP中转）
      */
-    async sendToWeComGroup(content) {
-        try {
-            await fetch('https://www.junwei.bid:89/web/20/wecom-webhook.php', {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ content })
-            });
-        } catch (err) {
-            console.error("Webhook推送异常", err);
-        }
-    }
+    // async sendToWeComGroup(content) {
+    //     try {
+    //         await fetch('https://www.junwei.bid:89/web/20/wecom-webhook.php', {
+    //             method: "POST",
+    //             headers: {
+    //                 "Content-Type": "application/json"
+    //             },
+    //             body: JSON.stringify({ content })
+    //         });
+    //     } catch (err) {
+    //         console.error("Webhook推送异常", err);
+    //     }
+    // }
 
     /**
      * 离线日志队列的本地存储键
