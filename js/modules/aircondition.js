@@ -349,9 +349,9 @@ class AirConditionApp extends BaseWorkLogApp {
      */
     collectOperationData() {
         return {
-            // 设备控制
-            chilledWaterPump: this.elements.chilledWaterPump?.value || '',
-            coolingWaterPump: this.elements.coolingWaterPump?.value || '',
+            // 设备控制 - 使用checked属性获取开关状态
+            chilledWaterPump: this.elements.chilledWaterPump?.checked ? '开' : '关',
+            coolingWaterPump: this.elements.coolingWaterPump?.checked ? '开' : '关',
             
             // 温度和压力数据
             chilledWaterInletTemp: this.elements.chilledWaterInletTemp?.value || '',
@@ -372,12 +372,12 @@ class AirConditionApp extends BaseWorkLogApp {
      */
     formatOperationDataToText(data) {
         let text = '空调机房操作记录\n\n';
-        content += `记录时间: ${new Date().toLocaleString()}\n\n`;
+        text += `记录时间: ${new Date().toLocaleString()}\n\n`;
         
         // 设备控制状态
         text += '【设备控制状态】\n';
-        text += `冷冻水泵: ${data.chilledWaterPump || '未填写'}\n`;
-        text += `冷却水泵: ${data.coolingWaterPump || '未填写'}\n`;
+        text += `冷冻水泵: ${data.chilledWaterPump}\n`;
+        text += `冷却水泵: ${data.coolingWaterPump}\n`;
         text += '\n';
         
         // 温度监测数据
@@ -393,7 +393,7 @@ class AirConditionApp extends BaseWorkLogApp {
         
         // 压力数据
         text += '【压力监测数据】\n';
-        text += `真空压力: ${data.vacuumPressure || '未填写'}MPa\n`;
+        text += `真空压力: ${data.vacuumPressure || '未填写'}mmHg\n`;
         
         return text;
     }
@@ -438,9 +438,10 @@ class AirConditionApp extends BaseWorkLogApp {
         const failed = [];
         for (const log of queue) {
             try {
-                await this.submitWorkLog(log.operationData, log.images || [], log.content);
+                const content = log.content || '';
+                await this.submitWorkLog(log.operationData, log.images || [], content);
                 let userName = this.currentUser?.get('realName') || this.currentUser?.get('username') || '';
-                let msg = `【空调机房操作记录-离线补发】\n用户：${userName}\n${log.content}`;
+                let msg = `【空调机房操作记录-离线补发】\n用户：${userName}\n${content}`;
                 this.sendToWeComGroup(msg);
             } catch (e) {
                 failed.push(log);
@@ -490,18 +491,27 @@ class AirConditionApp extends BaseWorkLogApp {
             const content = this.formatOperationDataToText(operationData);
             
             try {
+                // 确保content变量有效
+                const validContent = content || this.formatOperationDataToText(operationData);
+                
                 // 提交工作日志
-                await this.submitWorkLog(operationData, images, content);
+                await this.submitWorkLog(operationData, images, validContent);
                 WorkLogUtils.showMessage('操作记录提交成功！', 'success');
                 
-                // === 新增：推送到企业微信群 ===
+                // === 推送到企业微信群 ===
                 let userName = this.currentUser.get('realName') || this.currentUser.get('username') || '';
-                let msg = `【空调机房操作记录】\n用户：${userName}\n${content}`;
+                let msg = `【空调机房操作记录】\n用户：${userName}\n${validContent}`;
                 this.sendToWeComGroup(msg);
                 // ===
                 
             } catch (err) {
-                this.saveOfflineLog({ operationData, images, content });
+                // 确保保存离线日志时content有效
+                const offlineContent = content || this.formatOperationDataToText(operationData);
+                this.saveOfflineLog({ 
+                    operationData, 
+                    images, 
+                    content: offlineContent 
+                });
                 WorkLogUtils.showMessage('网络异常，记录已离线保存，联网后将自动同步', 'warning');
             }
             
