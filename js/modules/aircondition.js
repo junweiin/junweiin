@@ -268,48 +268,29 @@ class AirConditionApp extends BaseWorkLogApp {
      * 格式化操作数据为文本
      */
     formatOperationDataToText(data) {
-        let text = '=== 空调机房操作记录 ===\n\n';
+        let text = '空调机房操作记录\n\n';
+        content += `记录时间: ${new Date().toLocaleString()}\n\n`;
         
         // 设备控制状态
         text += '【设备控制状态】\n';
-        if (data.chilledWaterPump) {
-            text += `冷冻水泵: ${data.chilledWaterPump}\n`;
-        }
-        if (data.coolingWaterPump) {
-            text += `冷却水泵: ${data.coolingWaterPump}\n`;
-        }
+        text += `冷冻水泵: ${data.chilledWaterPump || '未填写'}\n`;
+        text += `冷却水泵: ${data.coolingWaterPump || '未填写'}\n`;
         text += '\n';
         
         // 温度监测数据
         text += '【温度监测数据】\n';
-        if (data.chilledWaterInletTemp) {
-            text += `冷冻水进水温度: ${data.chilledWaterInletTemp}°C\n`;
-        }
-        if (data.chilledWaterOutletTemp) {
-            text += `冷冻水出水温度: ${data.chilledWaterOutletTemp}°C\n`;
-        }
-        if (data.highTempGeneratorTemp) {
-            text += `高温发生器温度: ${data.highTempGeneratorTemp}°C\n`;
-        }
-        if (data.coolingWaterInletTemp) {
-            text += `冷却水进水温度: ${data.coolingWaterInletTemp}°C\n`;
-        }
-        if (data.coolingWaterOutletTemp) {
-            text += `冷却水出水温度: ${data.coolingWaterOutletTemp}°C\n`;
-        }
-        if (data.highZoneWaterTemp) {
-            text += `高区水温: ${data.highZoneWaterTemp}°C\n`;
-        }
-        if (data.lowZoneWaterTemp) {
-            text += `低区水温: ${data.lowZoneWaterTemp}°C\n`;
-        }
+        text += `冷冻水进水温度: ${data.chilledWaterInletTemp || '未填写'}°C\n`;
+        text += `冷冻水出水温度: ${data.chilledWaterOutletTemp || '未填写'}°C\n`;
+        text += `高温发生器温度: ${data.highTempGeneratorTemp || '未填写'}°C\n`;
+        text += `冷却水进水温度: ${data.coolingWaterInletTemp || '未填写'}°C\n`;
+        text += `冷却水出水温度: ${data.coolingWaterOutletTemp || '未填写'}°C\n`;
+        text += `高区水温: ${data.highZoneWaterTemp || '未填写'}°C\n`;
+        text += `低区水温: ${data.lowZoneWaterTemp || '未填写'}°C\n`;
         text += '\n';
         
         // 压力数据
         text += '【压力监测数据】\n';
-        if (data.vacuumPressure) {
-            text += `真空压力: ${data.vacuumPressure}\n`;
-        }
+        text += `真空压力: ${data.vacuumPressure || '未填写'}MPa\n`;
         
         return text;
     }
