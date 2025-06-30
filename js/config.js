@@ -32,4 +32,8 @@ const WORKLOG_CONFIG = {
 // 导出配置（兼容全局使用）
 if (typeof window !== 'undefined') {
     window.WORKLOG_CONFIG = WORKLOG_CONFIG;
+    // 导出LeanCloud配置为全局变量
+    window.LEANCLOUD_APP_ID = WORKLOG_CONFIG.LEANCLOUD.APP_ID;
+    window.LEANCLOUD_APP_KEY = WORKLOG_CONFIG.LEANCLOUD.APP_KEY;
+    window.LEANCLOUD_SERVER_URL = WORKLOG_CONFIG.LEANCLOUD.SERVER_URL;
 }

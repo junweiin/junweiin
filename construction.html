@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- 微信浏览器兼容性设置 -->
+    <meta name="x5-orientation" content="portrait">
+    <meta name="x5-fullscreen" content="true">
+    <meta name="x5-page-mode" content="app">
+    <title>酒店工程部入场施工登记</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <!-- 使用Tailwind CSS官方CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- LeanCloud SDK - 使用更稳定的 CDN 源 -->
+    <script src="https://unpkg.com/leancloud-storage@4.15.2/dist/av-min.js"></script>
+    <!-- 备用 CDN 源 -->
+    <script>
+        // 检测 LeanCloud SDK 是否加载成功，如果失败则使用备用源
+        window.addEventListener('load', function() {
+            if (typeof AV === 'undefined') {
+                console.log('主 CDN 加载失败，尝试备用源...');
+                var script = document.createElement('script');
+                script.src = 'https://cdn.bootcdn.net/ajax/libs/leancloud-storage/4.15.2/av-min.js';
+                script.onerror = function() {
+                    console.error('所有 CDN 源都加载失败，请检查网络连接');
+                    alert('网络连接异常，请检查网络后刷新页面');
+                };
+                document.head.appendChild(script);
+            }
+        });
+    </script>
+    <style>
+        /* 微信浏览器兼容性修复 */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+        
+        body {
+            -webkit-overflow-scrolling: touch;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        
+        input, textarea, button {
+            -webkit-appearance: none;
+            appearance: none;
+            border-radius: 0;
+        }
+        
+        button {
+            outline: none;
+            border: none;
+        }
+        
+        /* 修复微信中的滚动问题 */
+        .overflow-y-auto {
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .modal-overlay {
+            backdrop-filter: blur(4px);
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .loading {
+            border-top-color: #3498db;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .delete-log-btn {
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        
+        /* 微信中触摸设备的删除按钮显示优化 */
+        @media (hover: none) and (pointer: coarse) {
+            .delete-log-btn {
+                opacity: 0.6;
+            }
+        }
+        
+        .bg-white:hover .delete-log-btn {
+            opacity: 1;
+        }
+        .delete-log-btn:hover {
+            transform: scale(1.1);
+        }
+        @keyframes slideOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(-100%); }
+        }
+        
+        /* 统计模块样式 */
+        .stats-item {
+            transition: all 0.3s ease;
+        }
+        .stats-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .stats-count {
+            position: relative;
+        }
+        .stats-count.loading::after {
+            content: "";
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 2px;
+            background-color: #3b82f6;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { width: 20px; opacity: 1; }
+            50% { width: 30px; opacity: 0.5; }
+        }
+        
+        /* 微信浏览器中的按钮样式修复 */
+        .btn-fix {
+            -webkit-appearance: none;
+            appearance: none;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+        }
+        
+        /* 长链接和长文本换行处理 */
+        .break-words {
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        .overflow-wrap-anywhere {
+            overflow-wrap: anywhere;
+        }
+        
+        /* 确保链接在所有浏览器中都能正确换行 */
+        .log-content {
+            word-break: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+            -webkit-hyphens: auto;
+            -ms-hyphens: auto;
+        }
+        
+        /* 处理超长URL */
+        .log-content a {
+            word-break: break-all;
+            overflow-wrap: break-word;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto px-4 py-3">
+            <h1 class="text-xl font-semibold text-gray-800">酒店工程部入场施工登记</h1>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4 py-6">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 pt-6 pb-4 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-900">施工信息登记</h2>
+                <p class="mt-1 text-sm text-gray-500">请填写以下施工信息并提交</p>
+            </div>
+            <div class="p-6">
+            
+            <form id="constructionForm" class="space-y-6 divide-y divide-gray-200">
+                <!-- 施工基本信息部分 -->
+                <div class="space-y-6 pt-6">
+                <!-- 施工项目信息 -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">施工项目名称 <span class="text-red-500"></span>*</span></label>
+                    <input type="text" id="projectName" class="mt-1 block w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition duration-150 ease-in-out px-4 py-3 border" required>
+                </div>
+
+                <!-- 施工单位信息 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">施工单位 <span class="text-red-500"></span>*</span></label>
+                        <input type="text" id="companyName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border" required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">负责人*</label>
+                        <input type="text" id="contactPerson" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border" required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">联系电话*</label>
+                        <input type="tel" id="contactPhone" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border" required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">施工人数</label>
+                        <input type="number" id="workerCount" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border" min="1">
+                    </div>
+                </div>
+
+                <!-- 施工时间 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">计划开始时间*</label>
+                        <input type="datetime-local" id="startTime" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border" required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">计划结束时间*</label>
+                        <input type="datetime-local" id="endTime" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border" required>
+                    </div>
+                </div>
+
+                <!-- 施工区域 -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">施工区域*</label>
+                    <select id="constructionArea" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border" required>
+                        <option value="">请选择施工区域</option>
+                        <option value="大堂">大堂</option>
+                        <option value="客房区">客房区</option>
+                        <option value="餐厅">餐厅</option>
+                        <option value="后勤区">后勤区</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+
+                <!-- 安全措施 -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">安全措施*</label>
+                    <div class="space-y-3">
+                        <div class="flex items-center">
+                            <input id="safety1" name="safetyMeasures" type="checkbox" value="围挡隔离" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <label for="safety1" class="ml-3 block text-sm text-gray-700">围挡隔离</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input id="safety2" name="safetyMeasures" type="checkbox" value="安全警示标志" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <label for="safety2" class="ml-3 block text-sm text-gray-700">安全警示标志</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input id="safety3" name="safetyMeasures" type="checkbox" value="专人监护" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <label for="safety3" class="ml-3 block text-sm text-gray-700">专人监护</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 附件上传 -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">施工方案/图纸</label>
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                        <div class="space-y-1 text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <div class="flex text-sm text-gray-600">
+                                <label for="constructionFiles" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none">
+                                    <span>上传文件</span>
+                                    <input id="constructionFiles" name="constructionFiles" type="file" class="sr-only" multiple>
+                                </label>
+                                <p class="pl-1">或将文件拖到此处</p>
+                            </div>
+                            <p class="text-xs text-gray-500">支持PDF, JPG, PNG格式</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 签名按钮 -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">施工单位负责人签名 <span class="text-red-500">*</span></label>
+                    <button type="button" id="openSignatureModal" class="mt-1 w-full py-3 px-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-500 hover:text-blue-500 transition duration-150">
+                        点击进行签名
+                    </button>
+                    <input type="hidden" id="signatureData">
+                </div>
+
+                <!-- 签名模态窗 -->
+                <div id="signatureModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+                    <div class="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300"></div>
+                    <div class="relative min-h-screen flex items-center justify-center p-4">
+                        <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all duration-300 ease-out opacity-0 translate-y-4"
+                             id="modalContent">
+                            <div class="p-6">
+                                <h3 class="text-lg font-medium text-gray-900">请签名</h3>
+                                <div class="mt-4 border-2 border-gray-300 rounded-md">
+                                    <canvas id="signaturePad" class="w-full h-64 bg-white"></canvas>
+                                </div>
+                                <div class="mt-4 flex justify-between">
+                                    <button type="button" id="clearSignature" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                                        清除签名
+                                    </button>
+                                    <div class="space-x-3">
+                                        <button type="button" id="cancelSignature" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                                            取消
+                                        </button>
+                                        <button type="button" id="confirmSignature" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                                            确认签名
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 提交按钮 -->
+                <div class="pt-8 pb-4">
+                    <button type="submit" class="w-full flex justify-center items-center py-3 px-6 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium text-base shadow-sm transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <span>提交登记</span>
+                        <svg class="ml-2 -mr-1 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <!-- 签名库 -->
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
+    
+    <!-- 签名功能脚本 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('signatureModal');
+            const openBtn = document.getElementById('openSignatureModal');
+            const cancelBtn = document.getElementById('cancelSignature');
+            const confirmBtn = document.getElementById('confirmSignature');
+            const clearBtn = document.getElementById('clearSignature');
+            const canvas = document.getElementById('signaturePad');
+            const signatureData = document.getElementById('signatureData');
+            
+            let signaturePad = null;
+            let isSigned = false;
+
+            // 初始化签名板
+            function initSignaturePad() {
+                signaturePad = new SignaturePad(canvas, {
+                    backgroundColor: 'rgb(255, 255, 255)',
+                    penColor: 'rgb(0, 0, 0)'
+                });
+                
+                // 调整画布大小
+                function resizeCanvas() {
+                    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                    canvas.width = canvas.offsetWidth * ratio;
+                    canvas.height = canvas.offsetHeight * ratio;
+                    canvas.getContext('2d').scale(ratio, ratio);
+                    signaturePad.clear(); // 清除之前的签名
+                }
+                
+                window.addEventListener('resize', resizeCanvas);
+                resizeCanvas();
+            }
+
+            // 打开模态窗
+            openBtn.addEventListener('click', function() {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('modalContent').classList.remove('opacity-0', 'translate-y-4');
+                    document.getElementById('modalContent').classList.add('opacity-100', 'translate-y-0');
+                }, 10);
+                
+                if (!signaturePad) {
+                    initSignaturePad();
+                }
+            });
+
+            // 关闭模态窗
+            function closeModal() {
+                document.getElementById('modalContent').classList.remove('opacity-100', 'translate-y-0');
+                document.getElementById('modalContent').classList.add('opacity-0', 'translate-y-4');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
+            }
+
+            // 取消签名
+            cancelBtn.addEventListener('click', function() {
+                if (signaturePad && !signaturePad.isEmpty()) {
+                    if (!confirm('确定要取消签名吗？未保存的签名将丢失。')) {
+                        return;
+                    }
+                }
+                signaturePad.clear();
+                isSigned = false;
+                closeModal();
+            });
+
+            // 清除签名
+            clearBtn.addEventListener('click', function() {
+                signaturePad.clear();
+                isSigned = false;
+            });
+
+            // 确认签名
+            confirmBtn.addEventListener('click', function() {
+                if (signaturePad.isEmpty()) {
+                    alert('请先签名');
+                    return;
+                }
+                
+                // 保存签名数据
+                signatureData.value = signaturePad.toDataURL();
+                isSigned = true;
+                
+                // 更新按钮状态
+                openBtn.textContent = '已签名 (点击可修改)';
+                openBtn.classList.remove('border-dashed', 'text-gray-500');
+                openBtn.classList.add('border-solid', 'text-blue-600', 'border-blue-500');
+                
+                closeModal();
+            });
+
+            // 表单提交前检查签名
+            document.getElementById('constructionForm').addEventListener('submit', function(e) {
+                if (!isSigned) {
+                    e.preventDefault();
+                    alert('请先完成签名');
+                    openBtn.click();
+                }
+            });
+        });
+    </script>
+    
+    <!-- 复用现有项目的JS文件 -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/base-app.js"></script>
+    <script src="js/modules/construction.js"></script>
+</body>
+</html>

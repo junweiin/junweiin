@@ -209,6 +209,109 @@ class AirConditionApp extends BaseWorkLogApp {
     }
 
     /**
+     * 切换到上传模式
+     */
+    switchToUploadMode() {
+        if (!this.elements.imageInput) return;
+        
+        try {
+            // 触发文件选择对话框
+            this.elements.imageInput.click();
+        } catch (error) {
+            console.error('切换到上传模式失败:', error);
+            WorkLogUtils.showMessage('无法访问文件系统', 'error');
+        }
+    }
+
+    /**
+     * 切换到相机模式
+     */
+    async switchToCameraMode() {
+        try {
+            // 检查浏览器是否支持getUserMedia
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('浏览器不支持相机访问');
+            }
+
+            // 请求相机权限
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: false
+            });
+
+            // 创建视频元素显示相机预览
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            video.autoplay = true;
+            
+            // 清空预览区域并添加视频元素
+            if (this.elements.imagePreview) {
+                this.elements.imagePreview.innerHTML = '';
+                this.elements.imagePreview.appendChild(video);
+            }
+
+            // 添加拍照按钮
+            const captureBtn = document.createElement('button');
+            captureBtn.textContent = '拍照';
+            captureBtn.className = 'bg-blue-500 text-white px-4 py-2 rounded mt-2';
+            captureBtn.addEventListener('click', () => {
+                this.captureFromCamera(video);
+            });
+            
+            this.elements.imagePreview.appendChild(captureBtn);
+
+        } catch (error) {
+            console.error('切换到相机模式失败:', error);
+            WorkLogUtils.showMessage('无法访问相机: ' + error.message, 'error');
+            // 回退到上传模式
+            this.switchToUploadMode();
+        }
+    }
+
+    /**
+     * 从相机捕获照片
+     */
+    captureFromCamera(video) {
+        if (!this.elements.imagePreview) return;
+        
+        try {
+            // 创建canvas元素
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            
+            // 绘制视频帧到canvas
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // 转换为Blob对象
+            canvas.toBlob((blob) => {
+                // 创建文件对象
+                const file = new File([blob], 'camera-capture.jpg', {
+                    type: 'image/jpeg'
+                });
+                
+                // 模拟文件输入事件
+                this.showImagePreview([file]);
+                
+                // 停止视频流
+                const stream = video.srcObject;
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+                
+                // 清空预览区域
+                this.elements.imagePreview.innerHTML = '';
+                
+            }, 'image/jpeg', 0.9);
+            
+        } catch (error) {
+            console.error('拍照失败:', error);
+            WorkLogUtils.showMessage('拍照失败: ' + error.message, 'error');
+        }
+    }
+
+    /**
      * 显示图片预览
      */
     showImagePreview(files) {

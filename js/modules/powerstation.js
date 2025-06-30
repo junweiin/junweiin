@@ -353,19 +353,19 @@ class PowerStationApp extends BaseWorkLogApp {
     /**
      * 推送内容到企业微信群机器人（通过后端PHP中转）
      */
-    async sendToWeComGroup(content) {
-        try {
-            await fetch('https://www.junwei.bid:89/web/20/wecom-webhook.php', {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ content })
-            });
-        } catch (err) {
-            console.error("Webhook推送异常", err);
-        }
-    }
+    // async sendToWeComGroup(content) {
+    //     try {
+    //         await fetch('https://www.junwei.bid:89/web/20/wecom-webhook.php', {
+    //             method: "POST",
+    //             headers: {
+    //                 "Content-Type": "application/json"
+    //             },
+    //             body: JSON.stringify({ content })
+    //         });
+    //     } catch (err) {
+    //         console.error("Webhook推送异常", err);
+    //     }
+    // }
 
     /**
      * 离线日志队列的本地存储键
