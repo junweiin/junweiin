@@ -9,7 +9,11 @@ const urlsToCache = [
   '/js/modules/main-page.js',
   '/favicon.svg',
   '/aircondition.html',
+  '/powerstation.html',
+  '/waterfilter.html',
   '/js/modules/aircondition.js',
+  '/js/modules/powerstation.js',
+  '/js/modules/waterfilter.js',
   'https://cdn.tailwindcss.com',
   'https://unpkg.com/leancloud-storage@4.15.2/dist/av-min.js'
 ];
