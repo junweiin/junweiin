@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="format-detection" content="telephone=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <!-- 微信浏览器兼容性设置 -->
     <meta name="x5-orientation" content="portrait">
@@ -178,25 +177,25 @@
         
         <!-- 操作记录表单 -->
         <div id="operationSection" class="hidden">
+            <!-- 当前机组状态按钮 -->
+            <div class="flex justify-center mb-6">
+                <button id="unitStatus" data-status="off" class="px-8 py-3 rounded-lg text-lg font-bold transition-colors bg-gray-400 text-white focus:outline-none shadow">
+                    机组状态：关
+                </button>
+            </div>
             <!-- 设备状态控制 -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
                 <h2 class="text-lg font-semibold text-gray-800 mb-4">设备状态控制</h2>
                 <div class="space-y-4">
                     <div class="flex justify-between items-center">
-                        <div>
-                            <label class="text-gray-700 font-medium">冷冻水泵</label>
-                            <p class="text-xs text-gray-500">滑动开关控制状态</p>
-                        </div>
+                        <label class="text-gray-700 font-medium">冷冻水泵</label>
                         <label class="switch">
                             <input type="checkbox" id="chilledWaterPump">
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div class="flex justify-between items-center">
-                        <div>
-                            <label class="text-gray-700 font-medium">冷却水泵</label>
-                            <p class="text-xs text-gray-500">滑动开关控制状态</p>
-                        </div>
+                        <label class="text-gray-700 font-medium">冷却水泵</label>
                         <label class="switch">
                             <input type="checkbox" id="coolingWaterPump">
                             <span class="slider"></span>
@@ -230,8 +229,8 @@
                         <input type="number" id="coolingWaterOutletTemp" step="0.1" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="请输入温度">
                     </div>
                     <div>
-                        <label for="vacuumPressure" class="block text-sm font-medium text-gray-700 mb-2">真空压力 (mmHg)</label>
-                        <input type="number" id="vacuumPressure" step="0.1" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="请输入mmHg值">
+                        <label for="vacuumPressure" class="block text-sm font-medium text-gray-700 mb-2">真空压力 (kPa)</label>
+                        <input type="number" id="vacuumPressure" step="0.1" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="请输入压力">
                     </div>
                 </div>
             </div>
@@ -320,6 +319,23 @@
                 app.init();
             } else {
                 console.error('LeanCloud SDK not loaded');
+                // 尝试重新加载备用源
+                var script = document.createElement('script');
+                script.src = 'https://cdn.bootcdn.net/ajax/libs/leancloud-storage/4.15.2/av-min.js';
+                script.onload = function() {
+                    if (typeof AV !== 'undefined') {
+                        const app = new AirConditionApp();
+                        app.init();
+                    } else {
+                        console.error('Failed to load LeanCloud SDK from both sources');
+                        alert('无法加载LeanCloud SDK，请检查网络连接');
+                    }
+                };
+                script.onerror = function() {
+                    console.error('Failed to load LeanCloud SDK from both sources');
+                    alert('网络连接异常，请检查网络后刷新页面');
+                };
+                document.head.appendChild(script);
             }
         });
     </script>
