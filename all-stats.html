@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全员工作统计</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/leancloud-storage@4.15.2/dist/av-min.js"></script>
+    <style>
+        body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif; }
+        .stats-table th, .stats-table td { padding: 0.5rem 1rem; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center">
+            <a href="index.html" class="text-blue-600 font-bold text-lg mr-4">← 返回主页</a>
+            <h1 class="text-xl font-semibold text-gray-800">全员工作统计</h1>
+        </div>
+    </nav>
+    <main class="max-w-4xl mx-auto px-4 py-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">所有用户工作统计</h2>
+            <div id="allStatsLoading" class="text-gray-400 mb-4">统计数据加载中...</div>
+            <div class="overflow-x-auto">
+                <table class="stats-table min-w-full text-center border rounded-lg bg-white">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th>姓名</th>
+                            <th>今日</th>
+                            <th>本周</th>
+                            <th>本月</th>
+                            <th>本年</th>
+                            <th>总计</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allStatsBody">
+                        <!-- 数据动态填充 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    <!-- 引入模块化JS文件 -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/base-app.js"></script>
+    <script>
+    async function fetchAllUserStats() {
+        const $body = document.getElementById('allStatsBody');
+        const $loading = document.getElementById('allStatsLoading');
+        $body.innerHTML = '';
+        $loading.style.display = '';
+        try {
+            // 只查 WorkLog 表，聚合 user 字段
+            const logQuery = new AV.Query('WorkLog');
+            logQuery.limit(1000);
+            logQuery.select(['user', 'createdAt']);
+            logQuery.include('user');
+            const logs = await logQuery.find();
+            // 统计
+            const now = new Date();
+            // 今日区间
+            const todayStart = new Date(now); todayStart.setHours(0,0,0,0);
+            const todayEnd = new Date(todayStart); todayEnd.setDate(todayEnd.getDate() + 1);
+            // 本周区间（周一为第一天）
+            const weekStart = new Date(now); weekStart.setHours(0,0,0,0); weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
+            const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 7);
+            // 本月区间
+            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+            const monthEnd = new Date(monthStart); monthEnd.setMonth(monthStart.getMonth() + 1);
+            // 本年区间
+            const yearStart = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
+            const yearEnd = new Date(yearStart); yearEnd.setFullYear(yearStart.getFullYear() + 1);
+            const statsMap = {};
+            logs.forEach(log => {
+                const user = log.get('user');
+                if (!user) return;
+                const uid = user.id;
+                if (!statsMap[uid]) {
+                    let displayName = user.get('realName') || user.get('username') || user.id || '-';
+                    statsMap[uid] = {
+                        displayName,
+                        today: 0, week: 0, month: 0, year: 0, total: 0
+                    };
+                }
+                const created = log.createdAt;
+                statsMap[uid].total++;
+                if (created >= yearStart && created < yearEnd) statsMap[uid].year++;
+                if (created >= monthStart && created < monthEnd) statsMap[uid].month++;
+                if (created >= weekStart && created < weekEnd) statsMap[uid].week++;
+                if (created >= todayStart && created < todayEnd) statsMap[uid].today++;
+            });
+            // 渲染
+            Object.values(statsMap).forEach(stat => {
+                $body.innerHTML += `<tr><td>${stat.displayName||'-'}</td><td>${stat.today}</td><td>${stat.week}</td><td>${stat.month}</td><td>${stat.year}</td><td>${stat.total}</td></tr>`;
+            });
+            $loading.style.display = 'none';
+        } catch (e) {
+            $loading.textContent = '加载失败：' + e.message;
+        }
+    }
+    document.addEventListener('DOMContentLoaded', fetchAllUserStats);
+    </script>
+</body>
+</html>

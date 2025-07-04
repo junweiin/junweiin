@@ -57,13 +57,8 @@ class BaseWorkLogApp {
      * 初始化LeanCloud
      */
     initLeanCloud() {
-        const config = WORKLOG_CONFIG.LEANCLOUD;
-        AV.init({
-            appId: config.APP_ID,
-            appKey: config.APP_KEY,
-            serverURL: config.SERVER_URL
-        });
-        console.log('LeanCloud初始化完成');
+        // 已全局自动初始化，无需重复 AV.init
+        console.log('LeanCloud初始化（全局自动）');
     }
 
     /**

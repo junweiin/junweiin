@@ -36,4 +36,13 @@ if (typeof window !== 'undefined') {
     window.LEANCLOUD_APP_ID = WORKLOG_CONFIG.LEANCLOUD.APP_ID;
     window.LEANCLOUD_APP_KEY = WORKLOG_CONFIG.LEANCLOUD.APP_KEY;
     window.LEANCLOUD_SERVER_URL = WORKLOG_CONFIG.LEANCLOUD.SERVER_URL;
+
+    // 自动初始化 LeanCloud（只初始化一次）
+    if (typeof AV !== 'undefined' && !AV.applicationId) {
+        AV.init({
+            appId: WORKLOG_CONFIG.LEANCLOUD.APP_ID,
+            appKey: WORKLOG_CONFIG.LEANCLOUD.APP_KEY,
+            serverURLs: WORKLOG_CONFIG.LEANCLOUD.SERVER_URL
+        });
+    }
 }

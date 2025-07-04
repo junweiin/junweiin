@@ -434,7 +434,7 @@ class AirConditionApp extends BaseWorkLogApp {
         let text = '空调机房操作记录\n\n';
         text += `记录时间: ${new Date().toLocaleString()}\n\n`;
         // 当前机组状态
-        text += `当前机组状态: ${data.unitStatus || '未填写'}\n`;
+        text += `当前机组状态: ${data.unitStatus || '未填写'}\n\n`;
         // 设备控制状态
         text += '【设备控制状态】\n';
         text += `冷冻水泵: ${data.chilledWaterPump || '未填写'}\n`;

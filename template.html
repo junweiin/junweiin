@@ -128,17 +128,8 @@
             const { APP_ID, APP_KEY, SERVER_URL } = WORKLOG_CONFIG.LEANCLOUD;
             
             // 初始化LeanCloud
-            try {
-                AV.init({
-                    appId: APP_ID,
-                    appKey: APP_KEY,
-                    serverURL: SERVER_URL
-                });
-                console.log('LeanCloud初始化成功');
-            } catch (error) {
-                console.error('LeanCloud初始化失败:', error);
-                alert('系统初始化失败，请刷新页面重试');
-            }
+            // 已全局自动初始化，无需重复 AV.init
+            console.log('LeanCloud初始化（全局自动）');
             
             // 初始化认证模块
             WorkLogAuth.init();
