@@ -15,9 +15,11 @@ class AirConditionApp extends BaseWorkLogApp {
                 record.set('userId', this.currentUser.id);
                 record.set('realName', this.currentUser.get('realName') || this.currentUser.get('username') || '');
             }
+            // 当前机组状态
+            record.set('unitStatus', formData.unitStatus || '关');
             // 设备状态
-            record.set('chilledWaterPump', !!formData.chilledWaterPump);
-            record.set('coolingWaterPump', !!formData.coolingWaterPump);
+            record.set('chilledWaterPump', formData.chilledWaterPump === '开');
+            record.set('coolingWaterPump', formData.coolingWaterPump === '开');
             // 温度压力
             record.set('chilledWaterInletTemp', Number(formData.chilledWaterInletTemp));
             record.set('chilledWaterOutletTemp', Number(formData.chilledWaterOutletTemp));
