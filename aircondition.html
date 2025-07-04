@@ -177,6 +177,12 @@
         
         <!-- 操作记录表单 -->
         <div id="operationSection" class="hidden">
+            <!-- 当前机组状态按钮 -->
+            <div class="flex justify-center mb-6">
+                <button id="unitStatus" data-status="off" class="px-8 py-3 rounded-lg text-lg font-bold transition-colors bg-gray-400 text-white focus:outline-none shadow">
+                    机组状态：关
+                </button>
+            </div>
             <!-- 设备状态控制 -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
                 <h2 class="text-lg font-semibold text-gray-800 mb-4">设备状态控制</h2>
@@ -313,6 +319,23 @@
                 app.init();
             } else {
                 console.error('LeanCloud SDK not loaded');
+                // 尝试重新加载备用源
+                var script = document.createElement('script');
+                script.src = 'https://cdn.bootcdn.net/ajax/libs/leancloud-storage/4.15.2/av-min.js';
+                script.onload = function() {
+                    if (typeof AV !== 'undefined') {
+                        const app = new AirConditionApp();
+                        app.init();
+                    } else {
+                        console.error('Failed to load LeanCloud SDK from both sources');
+                        alert('无法加载LeanCloud SDK，请检查网络连接');
+                    }
+                };
+                script.onerror = function() {
+                    console.error('Failed to load LeanCloud SDK from both sources');
+                    alert('网络连接异常，请检查网络后刷新页面');
+                };
+                document.head.appendChild(script);
             }
         });
     </script>

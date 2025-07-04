@@ -22,6 +22,12 @@
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
+    <!-- LeanCloud SDK 和配置 -->
+    <script src="https://unpkg.com/leancloud-storage@4.15.2/dist/av-min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    
     <!-- 导航栏 -->
     <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
         <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
@@ -52,83 +58,209 @@
 
     <!-- 登录弹窗 -->
     <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-4">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-semibold text-gray-800">登录</h2>
-                <button id="closeModal" class="text-gray-400 hover:text-gray-600 text-2xl btn-fix">&times;</button>
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto fade-in">
+            <div class="sticky top-0 bg-white p-4 border-b border-gray-200 rounded-t-lg">
+                <div class="flex justify-between items-center">
+                    <h2 id="modalTitle" class="text-xl font-semibold text-gray-800">登录</h2>
+                    <button id="closeModal" class="text-gray-400 hover:text-gray-600 text-2xl btn-fix">&times;</button>
+                </div>
             </div>
-            <form id="loginForm" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
-                    <input type="text" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" required>
+            
+            <div class="p-4">
+                <!-- 登录表单 -->
+                <form id="loginForm" class="space-y-4">
+                    <div>
+                        <label for="loginUsername" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                        <input type="text" id="loginUsername" autocomplete="username" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" required>
+                    </div>
+                    <div>
+                        <label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                        <input type="password" id="loginPassword" autocomplete="current-password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" required>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                        <button type="submit" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg transition-colors text-sm font-medium btn-fix">登录</button>
+                    </div>
+                </form>
+                
+                <!-- 注册表单 -->
+                <form id="registerForm" class="hidden space-y-4 mt-4">
+                    <div>
+                        <label for="registerUsername" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                        <input type="text" id="registerUsername" autocomplete="username" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" required>
+                    </div>
+                    <div>
+                        <label for="registerRealName" class="block text-sm font-medium text-gray-700 mb-1">真实姓名</label>
+                        <input type="text" id="registerRealName" autocomplete="name" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" required>
+                    </div>
+                    <div>
+                        <label for="registerPassword" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                        <input type="password" id="registerPassword" autocomplete="new-password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" required>
+                    </div>
+                    <div>
+                        <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-1">确认密码</label>
+                        <input type="password" id="confirmPassword" autocomplete="new-password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" required>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                        <button type="submit" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg transition-colors text-sm font-medium btn-fix">注册</button>
+                    </div>
+                </form>
+                
+                <!-- 表单切换 -->
+                <div class="mt-4 text-center">
+                    <p class="text-sm text-gray-600">
+                        还没有账号？
+                        <a href="#" id="showRegisterBtn" class="text-blue-500 hover:text-blue-600 font-medium">立即注册</a>
+                    </p>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">密码</label>
-                    <input type="password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" required>
-                </div>
-                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg text-sm font-medium btn-fix">
-                    登录
-                </button>
-            </form>
+            </div>
         </div>
     </div>
 
-    <!-- LeanCloud SDK 和配置 -->
-    <script src="https://unpkg.com/leancloud-storage@4.15.2/dist/av-min.js"></script>
-    <script src="config.js"></script>
     <script>
-        // 检查配置是否加载成功
-        if (typeof LEANCLOUD_CONFIG === 'undefined') {
-            throw new Error('配置加载失败，请检查config.js文件');
-        }
-        
-        // 初始化LeanCloud
-        try {
-            AV.init({
-                appId: LEANCLOUD_CONFIG.APP_ID,
-                appKey: LEANCLOUD_CONFIG.APP_KEY,
-                serverURL: LEANCLOUD_CONFIG.SERVER_URL
-            });
-            console.log('LeanCloud初始化成功');
-        } catch (error) {
-            console.error('LeanCloud初始化失败:', error);
-            alert('系统初始化失败，请刷新页面重试');
-        }
-
-        // 登录弹窗交互
-        document.getElementById('loginBtn').addEventListener('click', () => {
-            document.getElementById('loginModal').classList.remove('hidden');
-        });
-        
-        document.getElementById('closeModal').addEventListener('click', () => {
-            document.getElementById('loginModal').classList.add('hidden');
-        });
-
-        // 登录表单提交
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        // 等待DOM完全加载完成后初始化应用
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查配置是否存在
+            if (typeof WORKLOG_CONFIG === 'undefined' || typeof WORKLOG_CONFIG.LEANCLOUD === 'undefined') {
+                throw new Error('配置加载失败，请检查config.js文件');
+            }
             
-            const username = document.querySelector('#loginForm input[type="text"]').value;
-            const password = document.querySelector('#loginForm input[type="password"]').value;
+            // 获取LeanCloud配置
+            const { APP_ID, APP_KEY, SERVER_URL } = WORKLOG_CONFIG.LEANCLOUD;
             
+            // 初始化LeanCloud
             try {
-                const user = await AV.User.logIn(username, password);
-                updateLoginState(user);
-                document.getElementById('loginModal').classList.add('hidden');
-                alert('登录成功');
+                AV.init({
+                    appId: APP_ID,
+                    appKey: APP_KEY,
+                    serverURL: SERVER_URL
+                });
+                console.log('LeanCloud初始化成功');
             } catch (error) {
-                console.error('登录失败:', error);
-                alert('登录失败: ' + error.message);
+                console.error('LeanCloud初始化失败:', error);
+                alert('系统初始化失败，请刷新页面重试');
+            }
+            
+            // 初始化认证模块
+            WorkLogAuth.init();
+            
+            // 检查登录状态
+            const currentUser = AV.User.current();
+            updateLoginState(currentUser);
+            
+            // 添加加载状态
+            const loginBtn = document.getElementById('loginBtn');
+            if (!loginBtn) {
+                console.error('登录按钮未找到');
+                return;
+            }
+            
+            const originalText = loginBtn.textContent;
+            
+            // 登录表单提交
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    try {
+                        loginBtn.disabled = true;
+                        loginBtn.textContent = '登录中...';
+                        
+                        await WorkLogAuth.handleLogin();
+                    } catch (error) {
+                        console.error('登录失败:', error);
+                        alert('登录失败: ' + error.message);
+                    } finally {
+                        loginBtn.disabled = false;
+                        loginBtn.textContent = originalText;
+                    }
+                });
+            } else {
+                console.error('登录表单未找到');
+            }
+            
+            // 注册表单提交
+            const registerForm = document.getElementById('registerForm');
+            if (registerForm) {
+                registerForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    try {
+                        loginBtn.disabled = true;
+                        loginBtn.textContent = '注册中...';
+                        
+                        await WorkLogAuth.handleRegister();
+                    } catch (error) {
+                        console.error('注册失败:', error);
+                        alert('注册失败: ' + error.message);
+                    } finally {
+                        loginBtn.disabled = false;
+                        loginBtn.textContent = originalText;
+                    }
+                });
+            } else {
+                console.error('注册表单未找到');
+            }
+            
+            // 登出按钮
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async () => {
+                    try {
+                        await WorkLogAuth.handleLogout();
+                        alert('已退出登录');
+                    } catch (error) {
+                        console.error('登出失败:', error);
+                        alert('登出失败: ' + error.message);
+                    }
+                });
+            } else {
+                console.error('登出按钮未找到');
+            }
+            
+            // 切换登录/注册表单
+            const showRegisterBtn = document.getElementById('showRegisterBtn');
+            const showLoginBtn = document.getElementById('showLoginBtn');
+            
+            if (showRegisterBtn) {
+                showRegisterBtn.addEventListener('click', () => {
+                    WorkLogAuth.showRegisterForm();
+                });
+            } else {
+                console.error('切换到注册表单按钮未找到');
+            }
+            
+            if (showLoginBtn) {
+                showLoginBtn.addEventListener('click', () => {
+                    WorkLogAuth.showLoginForm();
+                });
+            } else {
+                console.error('切换到登录表单按钮未找到');
+            }
+            
+            // 关闭模态框
+            const closeModal = document.getElementById('closeModal');
+            const loginModal = document.getElementById('loginModal');
+            
+            if (closeModal) {
+                closeModal.addEventListener('click', () => {
+                    WorkLogAuth.hideLoginModal();
+                });
+            } else {
+                console.error('关闭模态框按钮未找到');
+            }
+            
+            if (loginModal) {
+                loginModal.addEventListener('click', (e) => {
+                    if (e.target === loginModal) {
+                        WorkLogAuth.hideLoginModal();
+                    }
+                });
+            } else {
+                console.error('登录模态框未找到');
             }
         });
-
-        // 登出功能
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            AV.User.logOut();
-            updateLoginState(null);
-            alert('已退出登录');
-        });
-
+        
         // 更新登录状态
         function updateLoginState(user) {
             if (user) {
@@ -140,38 +272,6 @@
                 document.getElementById('userInfo').classList.add('hidden');
             }
         }
-
-        // 初始化检查登录状态
-        document.addEventListener('DOMContentLoaded', () => {
-            const currentUser = AV.User.current();
-            updateLoginState(currentUser);
-            
-            // 添加加载状态
-            const loginBtn = document.getElementById('loginBtn');
-            const originalText = loginBtn.textContent;
-            
-            document.getElementById('loginForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const username = document.querySelector('#loginForm input[type="text"]').value;
-                const password = document.querySelector('#loginForm input[type="password"]').value;
-                
-                try {
-                    loginBtn.disabled = true;
-                    loginBtn.textContent = '登录中...';
-                    
-                    const user = await AV.User.logIn(username, password);
-                    updateLoginState(user);
-                    document.getElementById('loginModal').classList.add('hidden');
-                } catch (error) {
-                    console.error('登录失败:', error);
-                    alert('登录失败: ' + error.message);
-                } finally {
-                    loginBtn.disabled = false;
-                    loginBtn.textContent = originalText;
-                }
-            });
-        });
     </script>
 </body>
 </html>

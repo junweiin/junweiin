@@ -4,6 +4,40 @@
  */
 
 class AirConditionApp extends BaseWorkLogApp {
+    /**
+     * 写入结构化数据到 AirConditionRecord 表
+     */
+    async saveToAirConditionRecord(formData, images) {
+        try {
+            const record = new AV.Object('AirConditionRecord');
+            // 用户信息
+            if (this.currentUser) {
+                record.set('userId', this.currentUser.id);
+                record.set('realName', this.currentUser.get('realName') || this.currentUser.get('username') || '');
+            }
+            // 设备状态
+            record.set('chilledWaterPump', !!formData.chilledWaterPump);
+            record.set('coolingWaterPump', !!formData.coolingWaterPump);
+            // 温度压力
+            record.set('chilledWaterInletTemp', Number(formData.chilledWaterInletTemp));
+            record.set('chilledWaterOutletTemp', Number(formData.chilledWaterOutletTemp));
+            record.set('highTempGeneratorTemp', Number(formData.highTempGeneratorTemp));
+            record.set('coolingWaterInletTemp', Number(formData.coolingWaterInletTemp));
+            record.set('coolingWaterOutletTemp', Number(formData.coolingWaterOutletTemp));
+            record.set('vacuumPressure', Number(formData.vacuumPressure));
+            // 高低区水温
+            record.set('highZoneWaterTemp', Number(formData.highZoneWaterTemp));
+            record.set('lowZoneWaterTemp', Number(formData.lowZoneWaterTemp));
+            // 图片
+            if (Array.isArray(images) && images.length > 0) {
+                record.set('images', images);
+            }
+            await record.save();
+        } catch (e) {
+            // 新表写入失败不影响主流程，但可提示
+            console.warn('写入AirConditionRecord失败', e);
+        }
+    }
     constructor() {
         super({
             pageType: 'aircondition',
@@ -24,11 +58,11 @@ class AirConditionApp extends BaseWorkLogApp {
             // 导航和用户相关
             backBtn: 'backBtn',
             realName: 'realName',
-            
+
             // 页面区域
             operationSection: 'operationSection',
             promptLoginBtn: 'promptLoginBtn',
-            
+
             // 登录弹窗
             closeModal: 'closeModal',
             loginForm: 'loginForm',
@@ -36,11 +70,14 @@ class AirConditionApp extends BaseWorkLogApp {
             showRegisterBtn: 'showRegisterBtn',
             showLoginBtn: 'showLoginBtn',
             modalTitle: 'modalTitle',
-            
+
+            // 当前机组状态
+            unitStatus: 'unitStatus',
+
             // 设备控制
             chilledWaterPump: 'chilledWaterPump',
             coolingWaterPump: 'coolingWaterPump',
-            
+
             // 温度和压力输入
             chilledWaterInletTemp: 'chilledWaterInletTemp',
             chilledWaterOutletTemp: 'chilledWaterOutletTemp',
@@ -48,15 +85,15 @@ class AirConditionApp extends BaseWorkLogApp {
             coolingWaterInletTemp: 'coolingWaterInletTemp',
             coolingWaterOutletTemp: 'coolingWaterOutletTemp',
             vacuumPressure: 'vacuumPressure',
-            
+
             // 水温
             highZoneWaterTemp: 'highZoneWaterTemp',
             lowZoneWaterTemp: 'lowZoneWaterTemp',
-            
+
             // 图片上传
             imageInput: 'imageInput',
             imagePreview: 'imagePreview',
-            
+
             // 提交按钮
             submitBtn: 'submitBtn'
         };
@@ -72,39 +109,57 @@ class AirConditionApp extends BaseWorkLogApp {
                 window.location.href = 'index.html';
             });
         }
-        
+
         // 登录提示按钮
         if (this.elements.promptLoginBtn) {
             this.elements.promptLoginBtn.addEventListener('click', () => {
                 WorkLogAuth.showLoginModal();
             });
         }
-        
+
         // 关闭模态框
         if (this.elements.closeModal) {
             this.elements.closeModal.addEventListener('click', () => {
                 WorkLogAuth.hideLoginModal();
             });
         }
-        
+
         // 表单切换
         if (this.elements.showRegisterBtn) {
             this.elements.showRegisterBtn.addEventListener('click', () => {
                 this.showRegisterForm();
             });
         }
-        
+
         if (this.elements.showLoginBtn) {
             this.elements.showLoginBtn.addEventListener('click', () => {
                 this.showLoginForm();
             });
         }
-        
+
+        // 当前机组状态按钮事件
+        if (this.elements.unitStatus) {
+            this.elements.unitStatus.addEventListener('click', () => {
+                const current = this.elements.unitStatus.getAttribute('data-status') === 'on';
+                if (current) {
+                    this.elements.unitStatus.setAttribute('data-status', 'off');
+                    this.elements.unitStatus.textContent = '机组状态：关';
+                    this.elements.unitStatus.classList.remove('bg-green-500');
+                    this.elements.unitStatus.classList.add('bg-gray-400');
+                } else {
+                    this.elements.unitStatus.setAttribute('data-status', 'on');
+                    this.elements.unitStatus.textContent = '机组状态：开';
+                    this.elements.unitStatus.classList.remove('bg-gray-400');
+                    this.elements.unitStatus.classList.add('bg-green-500');
+                }
+            });
+        }
+
         // 提交操作记录
         if (this.elements.submitBtn) {
             this.elements.submitBtn.addEventListener('click', this.handleSubmit);
         }
-        
+
         // 设置图片预览
         this.setupImagePreview();
     }
@@ -349,10 +404,13 @@ class AirConditionApp extends BaseWorkLogApp {
      */
     collectOperationData() {
         return {
+            // 当前机组状态
+            unitStatus: this.elements.unitStatus?.getAttribute('data-status') === 'on' ? '开' : '关',
+
             // 设备控制
-            chilledWaterPump: this.elements.chilledWaterPump?.value || '',
-            coolingWaterPump: this.elements.coolingWaterPump?.value || '',
-            
+            chilledWaterPump: this.elements.chilledWaterPump?.checked ? '开' : '关',
+            coolingWaterPump: this.elements.coolingWaterPump?.checked ? '开' : '关',
+
             // 温度和压力数据
             chilledWaterInletTemp: this.elements.chilledWaterInletTemp?.value || '',
             chilledWaterOutletTemp: this.elements.chilledWaterOutletTemp?.value || '',
@@ -360,7 +418,7 @@ class AirConditionApp extends BaseWorkLogApp {
             coolingWaterInletTemp: this.elements.coolingWaterInletTemp?.value || '',
             coolingWaterOutletTemp: this.elements.coolingWaterOutletTemp?.value || '',
             vacuumPressure: this.elements.vacuumPressure?.value || '',
-            
+
             // 水温数据
             highZoneWaterTemp: this.elements.highZoneWaterTemp?.value || '',
             lowZoneWaterTemp: this.elements.lowZoneWaterTemp?.value || ''
@@ -372,14 +430,14 @@ class AirConditionApp extends BaseWorkLogApp {
      */
     formatOperationDataToText(data) {
         let text = '空调机房操作记录\n\n';
-        content += `记录时间: ${new Date().toLocaleString()}\n\n`;
-        
+        text += `记录时间: ${new Date().toLocaleString()}\n\n`;
+        // 当前机组状态
+        text += `当前机组状态: ${data.unitStatus || '未填写'}\n`;
         // 设备控制状态
         text += '【设备控制状态】\n';
         text += `冷冻水泵: ${data.chilledWaterPump || '未填写'}\n`;
         text += `冷却水泵: ${data.coolingWaterPump || '未填写'}\n`;
         text += '\n';
-        
         // 温度监测数据
         text += '【温度监测数据】\n';
         text += `冷冻水进水温度: ${data.chilledWaterInletTemp || '未填写'}°C\n`;
@@ -390,11 +448,9 @@ class AirConditionApp extends BaseWorkLogApp {
         text += `高区水温: ${data.highZoneWaterTemp || '未填写'}°C\n`;
         text += `低区水温: ${data.lowZoneWaterTemp || '未填写'}°C\n`;
         text += '\n';
-        
         // 压力数据
         text += '【压力监测数据】\n';
-        text += `真空压力: ${data.vacuumPressure || '未填写'}MPa\n`;
-        
+        text += `真空压力: ${data.vacuumPressure || '未填写'} mmHg\n`;
         return text;
     }
 
@@ -482,32 +538,27 @@ class AirConditionApp extends BaseWorkLogApp {
                 this.elements.submitBtn.textContent = '提交中...';
                 this.elements.submitBtn.disabled = true;
             }
-            
             // 上传图片
             const images = await this.uploadImages();
-            
             // 格式化内容
             const content = this.formatOperationDataToText(operationData);
-            
             try {
                 // 提交工作日志
                 await this.submitWorkLog(operationData, images, content);
+                // 新增：写入结构化表
+                await this.saveToAirConditionRecord(operationData, images);
                 WorkLogUtils.showMessage('操作记录提交成功！', 'success');
-                
                 // === 新增：推送到企业微信群 ===
                 let userName = this.currentUser.get('realName') || this.currentUser.get('username') || '';
                 let msg = `【空调机房操作记录】\n用户：${userName}\n${content}`;
                 this.sendToWeComGroup(msg);
                 // ===
-                
             } catch (err) {
                 this.saveOfflineLog({ operationData, images, content });
                 WorkLogUtils.showMessage('网络异常，记录已离线保存，联网后将自动同步', 'warning');
             }
-            
             // 重置表单
             this.resetForm();
-            
         } catch (error) {
             console.error('提交失败:', error);
             WorkLogUtils.showMessage('提交失败: ' + error.message, 'error');
