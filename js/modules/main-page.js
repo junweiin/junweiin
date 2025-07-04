@@ -334,14 +334,14 @@ class MainPageApp extends BaseWorkLogApp {
         const logElement = document.createElement('div');
         logElement.className = 'bg-white rounded-lg shadow-md p-6 mb-4 log-item';
         logElement.dataset.logId = log.id;
-        
+
         const user = log.get('user');
         // 处理用户名显示逻辑：
         // 1. 优先使用用户对象的信息
         // 2. 如果没有用户对象，使用存储的username字段
         // 3. 如果都没有，使用authorName字段（历史数据兼容）
         let username, realName;
-        
+
         if (user) {
             username = user.get('username');
             realName = user.get('realName') || username;
@@ -349,7 +349,7 @@ class MainPageApp extends BaseWorkLogApp {
             // 处理历史数据
             const storedUsername = log.get('username');
             const authorName = log.get('authorName');
-            
+
             if (storedUsername) {
                 username = storedUsername;
                 realName = authorName || storedUsername;
@@ -366,7 +366,7 @@ class MainPageApp extends BaseWorkLogApp {
         const images = log.get('images') || [];
         const createdAt = log.get('createdAt');
         const pageType = log.get('pageType') || 'main';
-        
+
         // 页面类型标签
         const pageTypeLabels = {
             'main': '工作日志',
@@ -374,9 +374,9 @@ class MainPageApp extends BaseWorkLogApp {
             'waterfilter': '水处理记录',
             'aircondition': '空调记录',
         };
-        
+
         const pageTypeLabel = pageTypeLabels[pageType] || '工作日志';
-        
+
         let imagesHtml = '';
         if (images.length > 0) {
             imagesHtml = `
@@ -392,15 +392,15 @@ class MainPageApp extends BaseWorkLogApp {
                 </div>
             `;
         }
-        
-        // 操作按钮（删除）
+
+        // 操作按钮（删除、详情、分享）
         let actionButtonsHtml = '';
         if (this.currentUser && user) {
             const isPinned = log.get('isPinned') === true;
             // 检查用户权限 - 使用roles字段判断管理员权限
             const userRoles = this.currentUser.get('roles') || [];
             const isAdmin = userRoles.includes('admin');
-            
+
             // 删除按钮（仅对当前用户的日志显示）
             if (user.id === this.currentUser.id) {
                 actionButtonsHtml += `
@@ -410,10 +410,13 @@ class MainPageApp extends BaseWorkLogApp {
                     </button>
                 `;
             }
-            
-        
         }
-        
+
+        // 详情页按钮（所有日志都显示）
+        actionButtonsHtml += `
+            <a href="log-detail.html?objectId=${log.id}" target="_blank" class="text-blue-500 hover:text-blue-700 text-sm ml-2">详情/分享</a>
+        `;
+
         logElement.innerHTML = `
             <div class="flex justify-between items-start mb-3">
                 <div class="flex items-center space-x-2">
@@ -428,10 +431,12 @@ class MainPageApp extends BaseWorkLogApp {
             <div class="text-gray-700 whitespace-pre-wrap break-words overflow-wrap-anywhere log-content">${content}</div>
             ${imagesHtml}
         `;
-        
+
         if (this.elements.logsList) {
             this.elements.logsList.appendChild(logElement);
         }
+        // 返回元素用于测试或特殊用法
+        if (returnElement) return logElement;
     }
 
     /**
