@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>工程服务</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/leancloud-storage@4.15.2/dist/av-min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/modules/engineering-service.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 页面头部 -->
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <h1 class="text-2xl font-bold text-gray-800">工程服务</h1>
+                </div>
+                <div class="text-gray-500 text-base">研发楼工程维修项目在线报修</div>
+            </div>
+        </div>
+    </nav>
+    <!-- 空调模块和报修列表后续补充 -->
+    <main class="max-w-4xl mx-auto px-4 py-6">
+        <!-- 联系二维码模块 -->
+         <section class="mb-8">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-gray-800">研发楼工程问题联络群</h2>
+                <button id="openQRCodeModalBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow transition-colors">查看二维码</button>
+            </div>
+         </section>
+        <!-- 二维码模态窗 -->
+        <div id="qrCodeModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-xs relative flex flex-col items-center">
+                <button id="closeQRCodeModalBtn" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
+                <h3 class="text-lg font-bold mb-4 text-center">扫码加入联络群</h3>
+                <img src="https://www.junwei.bid:89/web/13/uploads/images/2025/07/1752555217.webp" alt="联络群二维码" class="w-48 h-48 object-contain rounded border mb-4 shadow" />
+                <button id="downloadQRCodeBtn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg mb-3">下载二维码</button>
+                <div class="text-gray-500 text-sm text-center">长按二维码可保存或识别，或点击上方按钮下载。<br>加入群聊便于及时沟通工程问题。</div>
+            </div>
+        </div>
+        <!-- 空调模块 -->
+        <section id="aircondition-section" class="mb-8">
+            <!-- 这里将展示最新空调状态 -->
+        </section>
+        <!-- 使用建议 -->
+        <section class="mt-8">
+            <h3 class="text-lg font-semibold text-blue-800 mb-2 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" /></svg>
+                使用建议
+            </h3>
+            <ul class="list-disc pl-6 space-y-2 text-gray-700">
+                <li>
+                    <span class="font-medium text-gray-900">冷量传递与末端风速：</span>
+                    溴化锂空调的冷量通过冷水传递到末端（如风机盘管），建议开启末端设备的高风速模式，加速冷风循环，让室内空气更快与低温盘管换热，缩短降温周期。
+                </li>
+                <li>
+                    <span class="font-medium text-gray-900">减少室内热源与热负荷：</span>
+                    关闭室内非必要热源（如灯光、设备、阳光直射），降低空调负荷（溴化锂机组的制冷量需匹配室内热负荷，负荷过高会延长降温时间）。
+                </li>
+                <li>
+                    <span class="font-medium text-gray-900">门窗管理：</span>
+                    关闭门窗，减少室外热空气渗入，避免冷量流失（尤其夏季高温环境下）。
+                </li>
+                <li>
+                    <span class="font-medium text-gray-900">水温数据解读：</span>
+                    冷冻水出水温度大约和末端温度差5-7℃。可参考系统冷冻水出水温度，计算末端房间的冷量。如果体感温度高，减去冷量丧失等因素后，可以在线报修。
+                </li>
+            </ul>
+        </section>
+        <!-- 报修列表 -->
+        <section id="repair-section">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">报修列表</h2>
+                <button id="openRepairModalBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow transition-colors">+ 新建报修</button>
+            </div>
+            <div id="repair-list" class="space-y-4">
+                <!-- 报修记录将通过 JS 动态渲染 -->
+            </div>
+        </section>
+        <!-- 报修模态窗 -->
+        <div id="repairModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
+                <button id="closeRepairModalBtn" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
+                <h3 class="text-xl font-bold mb-4">提交报修</h3>
+                <form id="repairForm" class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700 mb-1">报修内容</label>
+                        <textarea id="repairContent" class="w-full border rounded px-3 py-2" rows="3" required></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-1">房间号</label>
+                        <input id="repairRoom" type="text" class="w-full border rounded px-3 py-2" required />
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-1">联系人</label>
+                        <input id="repairContact" type="text" class="w-full border rounded px-3 py-2" autocomplete="off" required />
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-1">联系电话</label>
+                        <input id="repairPhone" type="tel" class="w-full border rounded px-3 py-2" required />
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg">提交</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+    </main>
+    <!-- 报修模态窗后续补充 -->
+    <footer class="max-w-4xl mx-auto px-4 py-6 text-sm text-gray-500">
+        <div class="footer-info">
+            <p>数据存储: LeanCloud后端服务 页面构建: GitHub Pages</p>
+        </div>
+    </footer>
+</body>
+</html>
